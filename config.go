@@ -139,6 +139,10 @@ func (this *ConfigClass) Get(str string) interface{} {
 	return this.configs[str]
 }
 
+func (this *ConfigClass) GetAll() interface{} {
+	return this.configs
+}
+
 func (this *ConfigClass) GetMap(str string) map[string]interface{} {
 	result := map[string]interface{}{}
 	switch this.configs[str].(type) {
