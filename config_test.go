@@ -17,6 +17,106 @@ func TestConfigClass_LoadYamlConfig(t *testing.T) {
 	fmt.Println(a)
 }
 
+func TestConfigClass_GetString2(t *testing.T) {
+	Config.LoadYamlConfig(Configuration{
+		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.yaml`,
+	})
+	str := Config.GetString(`/test1/test2/test3`)
+	if str != `45` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test/haha`)
+	if str != `a` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test2`)
+	if str != `b` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test3/test2/test4/test5/test6`)
+	if str != `122` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test3/test2/test4/test5/test7`)
+	if str != `11` {
+		t.Error()
+	}
+}
+
+func TestConfigClass_GetString3(t *testing.T) {
+	Config.LoadJsonConfig(Configuration{
+		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
+	})
+	str := Config.GetString(`/test1/test2/test3`)
+	if str != `45` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test/haha`)
+	if str != `a` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test2`)
+	if str != `b` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test3/test2/test4/test5/test6`)
+	if str != `122` {
+		t.Error()
+	}
+
+	str = Config.GetString(`/test3/test2/test4/test5/test7`)
+	if str != `11` {
+		t.Error()
+	}
+}
+
+func TestConfigClass_GetInt2(t *testing.T) {
+	Config.LoadJsonConfig(Configuration{
+		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
+	})
+	int_ := Config.GetInt(`/test1/test2/test3`)
+	if int_ != 45 {
+		t.Error()
+	}
+}
+
+func TestConfigClass_GetInt642(t *testing.T) {
+	Config.LoadJsonConfig(Configuration{
+		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
+	})
+	int_ := Config.GetInt64(`/test1/test2/test3`)
+	if int_ != 45 {
+		t.Error()
+	}
+}
+
+func TestConfigClass_GetMap(t *testing.T) {
+	Config.LoadJsonConfig(Configuration{
+		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
+	})
+	map_ := Config.GetMap(`/test3/test2`)
+	if map_[`test3`].(float64) != 45 {
+		t.Error()
+	}
+}
+
+func TestConfigClass_GetSlice(t *testing.T) {
+	Config.LoadJsonConfig(Configuration{
+		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
+	})
+	slice_ := Config.GetSlice(`/test3/test2/test8`)
+	if slice_[0].(float64) != 1 {
+		t.Error()
+	}
+}
+
 func TestConfigClass_GetString(t *testing.T) {
 	type fields struct {
 		configs map[string]interface{}

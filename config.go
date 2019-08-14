@@ -8,10 +8,17 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"strings"
+)
+
+const (
+	YAML_TYPE = `yaml`
+	JSON_TYPE = `json`
 )
 
 type ConfigClass struct {
-	configs map[string]interface{}
+	configs  map[string]interface{}
+	loadType string
 }
 
 var Config = ConfigClass{}
@@ -22,6 +29,7 @@ type Configuration struct {
 }
 
 func (this *ConfigClass) LoadYamlConfig(config Configuration) {
+	this.loadType = YAML_TYPE
 	configFile := ``
 	configMap := map[string]interface{}{}
 	if config.ConfigFilepath == `` {
@@ -66,6 +74,7 @@ func (this *ConfigClass) LoadYamlConfig(config Configuration) {
 }
 
 func (this *ConfigClass) LoadJsonConfig(config Configuration) {
+	this.loadType = JSON_TYPE
 	configFile := ``
 	configMap := map[string]interface{}{}
 	if config.ConfigFilepath == `` {
@@ -111,31 +120,166 @@ func (this *ConfigClass) LoadJsonConfig(config Configuration) {
 	}
 }
 
+func (this *ConfigClass) parseYaml(arr []string, length int) map[interface{}]interface{} {
+	temp := this.configs[arr[1]].(map[interface{}]interface{})
+	for _, v := range arr[2 : length-1] {
+		temp = temp[v].(map[interface{}]interface{})
+	}
+	return temp
+}
+
+func (this *ConfigClass) parseJson(arr []string, length int) map[string]interface{} {
+	temp := this.configs[arr[1]].(map[string]interface{})
+	for _, v := range arr[2 : length-1] {
+		temp = temp[v].(map[string]interface{})
+	}
+	return temp
+}
+
 func (this *ConfigClass) GetString(str string) string {
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetString(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return go_reflect.Reflect.ToString(temp[arr[length-1]])
+		} else {
+			temp := this.parseJson(arr, length)
+			return go_reflect.Reflect.ToString(temp[arr[length-1]])
+		}
+	}
 	return go_reflect.Reflect.ToString(this.configs[str])
 }
 
 func (this *ConfigClass) GetInt(str string) int {
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetInt(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return go_reflect.Reflect.ToInt(temp[arr[length-1]])
+		} else {
+			temp := this.parseJson(arr, length)
+			return go_reflect.Reflect.ToInt(temp[arr[length-1]])
+		}
+	}
 	return go_reflect.Reflect.ToInt(this.configs[str])
 }
 
 func (this *ConfigClass) GetInt64(str string) int64 {
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetInt64(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return go_reflect.Reflect.ToInt64(temp[arr[length-1]])
+		} else {
+			temp := this.parseJson(arr, length)
+			return go_reflect.Reflect.ToInt64(temp[arr[length-1]])
+		}
+	}
 	return go_reflect.Reflect.ToInt64(this.configs[str])
 }
 
 func (this *ConfigClass) GetUint64(str string) uint64 {
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetUint64(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return go_reflect.Reflect.ToUint64(temp[arr[length-1]])
+		} else {
+			temp := this.parseJson(arr, length)
+			return go_reflect.Reflect.ToUint64(temp[arr[length-1]])
+		}
+	}
 	return go_reflect.Reflect.ToUint64(this.configs[str])
 }
 
 func (this *ConfigClass) GetBool(str string) bool {
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetBool(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return go_reflect.Reflect.ToBool(temp[arr[length-1]])
+		} else {
+			temp := this.parseJson(arr, length)
+			return go_reflect.Reflect.ToBool(temp[arr[length-1]])
+		}
+	}
 	return go_reflect.Reflect.ToBool(this.configs[str])
 }
 
 func (this *ConfigClass) GetFloat64(str string) float64 {
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetFloat64(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
+		} else {
+			temp := this.parseJson(arr, length)
+			return go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
+		}
+	}
 	return go_reflect.Reflect.ToFloat64(this.configs[str])
 }
 
 func (this *ConfigClass) Get(str string) interface{} {
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetUint64(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return temp[arr[length-1]]
+		} else {
+			temp := this.parseJson(arr, length)
+			return temp[arr[length-1]]
+		}
+	}
 	return this.configs[str]
 }
 
@@ -145,13 +289,34 @@ func (this *ConfigClass) GetAll() interface{} {
 
 func (this *ConfigClass) GetMap(str string) map[string]interface{} {
 	result := map[string]interface{}{}
-	switch this.configs[str].(type) {
-	case map[interface{}]interface{}:
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetMap(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			temp1 := temp[arr[length-1]].(map[interface{}]interface{})
+			for k, v := range temp1 {
+				result[go_reflect.Reflect.ToString(k)] = v
+			}
+			return result
+		} else {
+			temp := this.parseJson(arr, length)
+			return temp[arr[length-1]].(map[string]interface{})
+		}
+	}
+
+	if this.loadType == YAML_TYPE {
 		temp := this.configs[str].(map[interface{}]interface{})
 		for k, v := range temp {
 			result[go_reflect.Reflect.ToString(k)] = v
 		}
-	default:
+	} else {
 		result = this.configs[str].(map[string]interface{})
 	}
 	return result
@@ -176,17 +341,22 @@ func (this *ConfigClass) GetStruct(str string, s interface{}) {
 }
 
 func (this *ConfigClass) GetSlice(str string) []interface{} {
-	return this.configs[str].([]interface{})
-}
-
-func (this *ConfigClass) GetSliceString(str string) []string {
-	return this.configs[str].([]string)
-}
-
-func (this *ConfigClass) GetSliceWithErr(str string) ([]interface{}, error) {
-	result, ok := this.configs[str].([]interface{})
-	if !ok {
-		return nil, errors.New(`type assert error`)
+	if strings.HasPrefix(str, `/`) {
+		arr := strings.Split(str, `/`)
+		length := len(arr)
+		if length <= 1 {
+			panic(`path error`)
+		}
+		if length == 2 {
+			return this.GetSlice(arr[1])
+		}
+		if this.loadType == YAML_TYPE {
+			temp := this.parseYaml(arr, length)
+			return temp[arr[length-1]].([]interface{})
+		} else {
+			temp := this.parseJson(arr, length)
+			return temp[arr[length-1]].([]interface{})
+		}
 	}
-	return result, nil
+	return this.configs[str].([]interface{})
 }
