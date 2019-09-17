@@ -26,40 +26,47 @@ var Config = ConfigClass{}
 type Configuration struct {
 	ConfigFilepath string
 	SecretFilepath string
+	ConfigEnvName  string
+	SecretEnvName  string
 }
 
 func (this *ConfigClass) LoadYamlConfig(config Configuration) {
 	this.loadType = YAML_TYPE
+
 	configFile := ``
 	configMap := map[string]interface{}{}
-	if config.ConfigFilepath == `` {
-		configFile = os.Getenv(`GO_CONFIG`)
-	} else {
-		configFile = config.ConfigFilepath
-	}
-	if configFile != `` {
-		bytes, err := ioutil.ReadFile(configFile)
-		if err == nil {
-			err = yaml.Unmarshal(bytes, &configMap)
-			if err != nil {
-				panic(err)
+	if config.ConfigEnvName != `` || config.ConfigFilepath != `` {
+		if config.ConfigEnvName != `` {
+			configFile = os.Getenv(config.ConfigEnvName)
+		} else if config.ConfigFilepath != `` {
+			configFile = config.ConfigFilepath
+		}
+		if configFile != `` {
+			bytes, err := ioutil.ReadFile(configFile)
+			if err == nil {
+				err = yaml.Unmarshal(bytes, &configMap)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
 
 	secretFile := ``
 	secretMap := map[string]interface{}{}
-	if config.SecretFilepath == `` {
-		secretFile = os.Getenv(`GO_SECRET`)
-	} else {
-		secretFile = config.SecretFilepath
-	}
-	if secretFile != `` {
-		bytes, err := ioutil.ReadFile(secretFile)
-		if err == nil {
-			err = yaml.Unmarshal(bytes, &secretMap)
-			if err != nil {
-				panic(err)
+	if config.SecretEnvName != `` || config.SecretFilepath != `` {
+		if config.SecretEnvName != `` {
+			secretFile = os.Getenv(config.SecretEnvName)
+		} else if config.SecretFilepath != `` {
+			secretFile = config.SecretFilepath
+		}
+		if secretFile != `` {
+			bytes, err := ioutil.ReadFile(secretFile)
+			if err == nil {
+				err = yaml.Unmarshal(bytes, &secretMap)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
@@ -77,37 +84,41 @@ func (this *ConfigClass) LoadJsonConfig(config Configuration) {
 	this.loadType = JSON_TYPE
 	configFile := ``
 	configMap := map[string]interface{}{}
-	if config.ConfigFilepath == `` {
-		configFile = os.Getenv(`GO_CONFIG`)
-	} else {
-		configFile = config.ConfigFilepath
-	}
-	if configFile != `` {
-		bytes, err := ioutil.ReadFile(configFile)
-		if err == nil {
-			var result interface{}
-			if err := json.Unmarshal(bytes, &result); err != nil {
-				panic(err)
+	if config.ConfigEnvName != `` || config.ConfigFilepath != `` {
+		if config.ConfigEnvName != `` {
+			configFile = os.Getenv(config.ConfigEnvName)
+		} else if config.ConfigFilepath != `` {
+			configFile = config.ConfigFilepath
+		}
+		if configFile != `` {
+			bytes, err := ioutil.ReadFile(configFile)
+			if err == nil {
+				var result interface{}
+				if err := json.Unmarshal(bytes, &result); err != nil {
+					panic(err)
+				}
+				configMap = result.(map[string]interface{})
 			}
-			configMap = result.(map[string]interface{})
 		}
 	}
 
 	secretFile := ``
 	secretMap := map[string]interface{}{}
-	if config.SecretFilepath == `` {
-		secretFile = os.Getenv(`GO_SECRET`)
-	} else {
-		secretFile = config.SecretFilepath
-	}
-	if secretFile != `` {
-		bytes, err := ioutil.ReadFile(secretFile)
-		if err == nil {
-			var result interface{}
-			if err := json.Unmarshal(bytes, &result); err != nil {
-				panic(err)
+	if config.SecretEnvName != `` || config.SecretFilepath != `` {
+		if config.SecretEnvName != `` {
+			secretFile = os.Getenv(config.SecretEnvName)
+		} else if config.SecretFilepath != `` {
+			secretFile = config.SecretFilepath
+		}
+		if secretFile != `` {
+			bytes, err := ioutil.ReadFile(secretFile)
+			if err == nil {
+				var result interface{}
+				if err := json.Unmarshal(bytes, &result); err != nil {
+					panic(err)
+				}
+				secretMap = result.(map[string]interface{})
 			}
-			secretMap = result.(map[string]interface{})
 		}
 	}
 
