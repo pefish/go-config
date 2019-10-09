@@ -27,6 +27,8 @@ func TestConfigClass_GetString2(t *testing.T) {
 	}
 
 	str = Config.GetString(`/test/haha`)
+	str1 := Config.GetString(`/test/haha`)
+	fmt.Println(str1, `  cache`)
 	if str != `a` {
 		t.Error()
 	}

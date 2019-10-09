@@ -155,7 +155,7 @@ func (this *ConfigClass) GetString(str string) string {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetString(arr[1])
+			return go_reflect.Reflect.ToString(this.configs[arr[1]])
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
@@ -176,7 +176,7 @@ func (this *ConfigClass) GetInt(str string) int {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetInt(arr[1])
+			return go_reflect.Reflect.ToInt(this.configs[arr[1]])
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
@@ -197,7 +197,7 @@ func (this *ConfigClass) GetInt64(str string) int64 {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetInt64(arr[1])
+			return go_reflect.Reflect.ToInt64(this.configs[arr[1]])
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
@@ -218,7 +218,7 @@ func (this *ConfigClass) GetUint64(str string) uint64 {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetUint64(arr[1])
+			return go_reflect.Reflect.ToUint64(this.configs[arr[1]])
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
@@ -239,7 +239,7 @@ func (this *ConfigClass) GetBool(str string) bool {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetBool(arr[1])
+			return go_reflect.Reflect.ToBool(this.configs[arr[1]])
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
@@ -260,7 +260,7 @@ func (this *ConfigClass) GetFloat64(str string) float64 {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetFloat64(arr[1])
+			return go_reflect.Reflect.ToFloat64(this.configs[arr[1]])
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
@@ -281,7 +281,7 @@ func (this *ConfigClass) Get(str string) interface{} {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetUint64(arr[1])
+			return this.configs[arr[1]]
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
@@ -359,7 +359,7 @@ func (this *ConfigClass) GetSlice(str string) []interface{} {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetSlice(arr[1])
+			return this.configs[arr[1]].([]interface{})
 		}
 		if this.loadType == YAML_TYPE {
 			temp := this.parseYaml(arr, length)
