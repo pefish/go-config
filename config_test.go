@@ -6,19 +6,19 @@ import (
 )
 
 func TestConfigClass_LoadYamlConfig(t *testing.T) {
-	Config.LoadYamlConfig(Configuration{
+	Config.MustLoadYamlConfig(Configuration{
 		ConfigFilepath: `/Users/joy/Work/backend/go-core/_example/config/local.yaml`,
 		SecretFilepath: `/Users/joy/Work/backend/go-core/_example/secret/local1.yaml`,
 	})
 	a := struct {
 		Host string `json:"host"`
 	}{}
-	Config.GetStruct(`mysql`, &a)
+	Config.MustGetStruct(`mysql`, &a)
 	fmt.Println(a)
 }
 
 func TestConfigClass_GetString2(t *testing.T) {
-	Config.LoadYamlConfig(Configuration{
+	Config.MustLoadYamlConfig(Configuration{
 		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.yaml`,
 	})
 	str := Config.GetString(`/test1/test2/test3`)
@@ -50,7 +50,7 @@ func TestConfigClass_GetString2(t *testing.T) {
 }
 
 func TestConfigClass_GetString3(t *testing.T) {
-	Config.LoadJsonConfig(Configuration{
+	Config.MustLoadJsonConfig(Configuration{
 		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
 	})
 	str := Config.GetString(`/test1/test2/test3`)
@@ -80,7 +80,7 @@ func TestConfigClass_GetString3(t *testing.T) {
 }
 
 func TestConfigClass_GetInt2(t *testing.T) {
-	Config.LoadJsonConfig(Configuration{
+	Config.MustLoadJsonConfig(Configuration{
 		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
 	})
 	int_ := Config.GetInt(`/test1/test2/test3`)
@@ -90,7 +90,7 @@ func TestConfigClass_GetInt2(t *testing.T) {
 }
 
 func TestConfigClass_GetInt642(t *testing.T) {
-	Config.LoadJsonConfig(Configuration{
+	Config.MustLoadJsonConfig(Configuration{
 		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
 	})
 	int_ := Config.GetInt64(`/test1/test2/test3`)
@@ -100,23 +100,30 @@ func TestConfigClass_GetInt642(t *testing.T) {
 }
 
 func TestConfigClass_GetMap(t *testing.T) {
-	Config.LoadJsonConfig(Configuration{
+	Config.MustLoadJsonConfig(Configuration{
 		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
 	})
-	map_ := Config.GetMap(`/test3/test2`)
+	map_ := Config.MustGetMap(`/test3/test2`)
 	if map_[`test3`].(float64) != 45 {
 		t.Error()
 	}
 }
 
 func TestConfigClass_GetSlice(t *testing.T) {
-	Config.LoadJsonConfig(Configuration{
+	Config.MustLoadJsonConfig(Configuration{
 		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
 	})
-	slice_ := Config.GetSlice(`/test3/test2/test8`)
+	slice_ := Config.MustGetSlice(`/test3/test2/test8`)
 	if slice_[0].(float64) != 1 {
 		t.Error()
 	}
+}
+
+func TestConfigClass_GetBool(t *testing.T) {
+	Config.MustLoadJsonConfig(Configuration{
+		ConfigFilepath: `/Users/joy/Work/backend/go-config/test/test.json`,
+	})
+	fmt.Println(Config.GetBool(`xixi`))
 }
 
 func TestConfigClass_GetString(t *testing.T) {

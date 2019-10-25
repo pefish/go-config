@@ -30,7 +30,7 @@ type Configuration struct {
 	SecretEnvName  string
 }
 
-func (this *ConfigClass) LoadYamlConfig(config Configuration) {
+func (this *ConfigClass) MustLoadYamlConfig(config Configuration) {
 	this.loadType = YAML_TYPE
 
 	configFile := ``
@@ -80,7 +80,7 @@ func (this *ConfigClass) LoadYamlConfig(config Configuration) {
 	}
 }
 
-func (this *ConfigClass) LoadJsonConfig(config Configuration) {
+func (this *ConfigClass) MustLoadJsonConfig(config Configuration) {
 	this.loadType = JSON_TYPE
 	configFile := ``
 	configMap := map[string]interface{}{}
@@ -131,20 +131,32 @@ func (this *ConfigClass) LoadJsonConfig(config Configuration) {
 	}
 }
 
-func (this *ConfigClass) parseYaml(arr []string, length int) map[interface{}]interface{} {
-	temp := this.configs[arr[1]].(map[interface{}]interface{})
-	for _, v := range arr[2 : length-1] {
-		temp = temp[v].(map[interface{}]interface{})
+func (this *ConfigClass) parseYaml(arr []string, length int) (map[interface{}]interface{}, error) {
+	temp, ok := this.configs[arr[1]].(map[interface{}]interface{})
+	if !ok {
+		return nil, errors.New(`parse error`)
 	}
-	return temp
+	for _, v := range arr[2 : length-1] {
+		temp, ok = temp[v].(map[interface{}]interface{})
+		if !ok {
+			return nil, errors.New(`parse error`)
+		}
+	}
+	return temp, nil
 }
 
-func (this *ConfigClass) parseJson(arr []string, length int) map[string]interface{} {
-	temp := this.configs[arr[1]].(map[string]interface{})
-	for _, v := range arr[2 : length-1] {
-		temp = temp[v].(map[string]interface{})
+func (this *ConfigClass) parseJson(arr []string, length int) (map[string]interface{}, error) {
+	temp, ok := this.configs[arr[1]].(map[string]interface{})
+	if !ok {
+		return nil, errors.New(`parse error`)
 	}
-	return temp
+	for _, v := range arr[2 : length-1] {
+		temp, ok = temp[v].(map[string]interface{})
+		if !ok {
+			return nil, errors.New(`parse error`)
+		}
+	}
+	return temp, nil
 }
 
 func (this *ConfigClass) GetString(str string) string {
@@ -152,20 +164,30 @@ func (this *ConfigClass) GetString(str string) string {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			panic(`path error`)
+			return ``
 		}
 		if length == 2 {
-			return go_reflect.Reflect.ToString(this.configs[arr[1]])
+			result, _ := go_reflect.Reflect.ToString(this.configs[arr[1]])
+			return result
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
-			return go_reflect.Reflect.ToString(temp[arr[length-1]])
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				return ``
+			}
+			result, _ := go_reflect.Reflect.ToString(temp[arr[length-1]])
+			return result
 		} else {
-			temp := this.parseJson(arr, length)
-			return go_reflect.Reflect.ToString(temp[arr[length-1]])
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				return ``
+			}
+			result, _ := go_reflect.Reflect.ToString(temp[arr[length-1]])
+			return result
 		}
 	}
-	return go_reflect.Reflect.ToString(this.configs[str])
+	result, _ := go_reflect.Reflect.ToString(this.configs[str])
+	return result
 }
 
 func (this *ConfigClass) GetInt(str string) int {
@@ -173,20 +195,30 @@ func (this *ConfigClass) GetInt(str string) int {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			panic(`path error`)
+			return 0
 		}
 		if length == 2 {
-			return go_reflect.Reflect.ToInt(this.configs[arr[1]])
+			result, _ := go_reflect.Reflect.ToInt(this.configs[arr[1]])
+			return result
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
-			return go_reflect.Reflect.ToInt(temp[arr[length-1]])
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToInt(temp[arr[length-1]])
+			return result
 		} else {
-			temp := this.parseJson(arr, length)
-			return go_reflect.Reflect.ToInt(temp[arr[length-1]])
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToInt(temp[arr[length-1]])
+			return result
 		}
 	}
-	return go_reflect.Reflect.ToInt(this.configs[str])
+	result, _ := go_reflect.Reflect.ToInt(this.configs[str])
+	return result
 }
 
 func (this *ConfigClass) GetInt64(str string) int64 {
@@ -194,20 +226,30 @@ func (this *ConfigClass) GetInt64(str string) int64 {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			panic(`path error`)
+			return 0
 		}
 		if length == 2 {
-			return go_reflect.Reflect.ToInt64(this.configs[arr[1]])
+			result, _ := go_reflect.Reflect.ToInt64(this.configs[arr[1]])
+			return result
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
-			return go_reflect.Reflect.ToInt64(temp[arr[length-1]])
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToInt64(temp[arr[length-1]])
+			return result
 		} else {
-			temp := this.parseJson(arr, length)
-			return go_reflect.Reflect.ToInt64(temp[arr[length-1]])
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToInt64(temp[arr[length-1]])
+			return result
 		}
 	}
-	return go_reflect.Reflect.ToInt64(this.configs[str])
+	result, _ := go_reflect.Reflect.ToInt64(this.configs[str])
+	return result
 }
 
 func (this *ConfigClass) GetUint64(str string) uint64 {
@@ -215,20 +257,30 @@ func (this *ConfigClass) GetUint64(str string) uint64 {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			panic(`path error`)
+			return 0
 		}
 		if length == 2 {
-			return go_reflect.Reflect.ToUint64(this.configs[arr[1]])
+			result, _ := go_reflect.Reflect.ToUint64(this.configs[arr[1]])
+			return result
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
-			return go_reflect.Reflect.ToUint64(temp[arr[length-1]])
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToUint64(temp[arr[length-1]])
+			return result
 		} else {
-			temp := this.parseJson(arr, length)
-			return go_reflect.Reflect.ToUint64(temp[arr[length-1]])
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToUint64(temp[arr[length-1]])
+			return result
 		}
 	}
-	return go_reflect.Reflect.ToUint64(this.configs[str])
+	result, _ := go_reflect.Reflect.ToUint64(this.configs[str])
+	return result
 }
 
 func (this *ConfigClass) GetBool(str string) bool {
@@ -236,20 +288,30 @@ func (this *ConfigClass) GetBool(str string) bool {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			panic(`path error`)
+			return false
 		}
 		if length == 2 {
-			return go_reflect.Reflect.ToBool(this.configs[arr[1]])
+			result, _ := go_reflect.Reflect.ToBool(this.configs[arr[1]])
+			return result
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
-			return go_reflect.Reflect.ToBool(temp[arr[length-1]])
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				return false
+			}
+			result, _ := go_reflect.Reflect.ToBool(temp[arr[length-1]])
+			return result
 		} else {
-			temp := this.parseJson(arr, length)
-			return go_reflect.Reflect.ToBool(temp[arr[length-1]])
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				return false
+			}
+			result, _ := go_reflect.Reflect.ToBool(temp[arr[length-1]])
+			return result
 		}
 	}
-	return go_reflect.Reflect.ToBool(this.configs[str])
+	result, _ := go_reflect.Reflect.ToBool(this.configs[str])
+	return result
 }
 
 func (this *ConfigClass) GetFloat64(str string) float64 {
@@ -257,20 +319,30 @@ func (this *ConfigClass) GetFloat64(str string) float64 {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			panic(`path error`)
+			return 0
 		}
 		if length == 2 {
-			return go_reflect.Reflect.ToFloat64(this.configs[arr[1]])
+			result, _ := go_reflect.Reflect.ToFloat64(this.configs[arr[1]])
+			return result
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
-			return go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
+			return result
 		} else {
-			temp := this.parseJson(arr, length)
-			return go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				return 0
+			}
+			result, _ := go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
+			return result
 		}
 	}
-	return go_reflect.Reflect.ToFloat64(this.configs[str])
+	result, _ := go_reflect.Reflect.ToFloat64(this.configs[str])
+	return result
 }
 
 func (this *ConfigClass) Get(str string) interface{} {
@@ -278,16 +350,22 @@ func (this *ConfigClass) Get(str string) interface{} {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			panic(`path error`)
+			return nil
 		}
 		if length == 2 {
 			return this.configs[arr[1]]
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				return nil
+			}
 			return temp[arr[length-1]]
 		} else {
-			temp := this.parseJson(arr, length)
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				return nil
+			}
 			return temp[arr[length-1]]
 		}
 	}
@@ -298,7 +376,7 @@ func (this *ConfigClass) GetAll() interface{} {
 	return this.configs
 }
 
-func (this *ConfigClass) GetMap(str string) map[string]interface{} {
+func (this *ConfigClass) MustGetMap(str string) map[string]interface{} {
 	result := map[string]interface{}{}
 	if strings.HasPrefix(str, `/`) {
 		arr := strings.Split(str, `/`)
@@ -307,17 +385,23 @@ func (this *ConfigClass) GetMap(str string) map[string]interface{} {
 			panic(`path error`)
 		}
 		if length == 2 {
-			return this.GetMap(arr[1])
+			return this.MustGetMap(arr[1])
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				panic(err)
+			}
 			temp1 := temp[arr[length-1]].(map[interface{}]interface{})
 			for k, v := range temp1 {
-				result[go_reflect.Reflect.ToString(k)] = v
+				result[go_reflect.Reflect.MustToString(k)] = v
 			}
 			return result
 		} else {
-			temp := this.parseJson(arr, length)
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				panic(err)
+			}
 			return temp[arr[length-1]].(map[string]interface{})
 		}
 	}
@@ -325,7 +409,7 @@ func (this *ConfigClass) GetMap(str string) map[string]interface{} {
 	if this.loadType == YAML_TYPE {
 		temp := this.configs[str].(map[interface{}]interface{})
 		for k, v := range temp {
-			result[go_reflect.Reflect.ToString(k)] = v
+			result[go_reflect.Reflect.MustToString(k)] = v
 		}
 	} else {
 		result = this.configs[str].(map[string]interface{})
@@ -333,7 +417,7 @@ func (this *ConfigClass) GetMap(str string) map[string]interface{} {
 	return result
 }
 
-func (this *ConfigClass) GetStruct(str string, s interface{}) {
+func (this *ConfigClass) MustGetStruct(str string, s interface{}) {
 	config := &mapstructure.DecoderConfig{
 		WeaklyTypedInput: true,
 		TagName:          "json",
@@ -345,13 +429,13 @@ func (this *ConfigClass) GetStruct(str string, s interface{}) {
 		panic(err)
 	}
 
-	err = decoder.Decode(this.GetMap(str))
+	err = decoder.Decode(this.MustGetMap(str))
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (this *ConfigClass) GetSlice(str string) []interface{} {
+func (this *ConfigClass) MustGetSlice(str string) []interface{} {
 	if strings.HasPrefix(str, `/`) {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
@@ -362,10 +446,16 @@ func (this *ConfigClass) GetSlice(str string) []interface{} {
 			return this.configs[arr[1]].([]interface{})
 		}
 		if this.loadType == YAML_TYPE {
-			temp := this.parseYaml(arr, length)
+			temp, err := this.parseYaml(arr, length)
+			if err != nil {
+				panic(err)
+			}
 			return temp[arr[length-1]].([]interface{})
 		} else {
-			temp := this.parseJson(arr, length)
+			temp, err := this.parseJson(arr, length)
+			if err != nil {
+				panic(err)
+			}
 			return temp[arr[length-1]].([]interface{})
 		}
 	}
