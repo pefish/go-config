@@ -474,3 +474,21 @@ func (this *ConfigClass) MustGetSlice(str string) []interface{} {
 	}
 	return this.configs[str].([]interface{})
 }
+
+func (this *ConfigClass) MustGetStringSlice(str string) []string {
+	var result []string
+	results := this.MustGetSlice(str)
+	for _, v := range results {
+		result = append(result, v.(string))
+	}
+	return result
+}
+
+func (this *ConfigClass) MustGetUint64Slice(str string) []uint64 {
+	var result []uint64
+	results := this.MustGetSlice(str)
+	for _, v := range results {
+		result = append(result, go_reflect.Reflect.MustToUint64(v))
+	}
+	return result
+}
