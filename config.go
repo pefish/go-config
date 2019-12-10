@@ -3,6 +3,7 @@ package go_config
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pefish/go-reflect"
 	"gopkg.in/yaml.v2"
@@ -143,6 +144,12 @@ func (this *ConfigClass) parseYaml(arr []string, length int) (map[interface{}]in
 		}
 	}
 	return temp, nil
+}
+
+func (this *ConfigClass) MergeFlag(f flag.Flag) {
+	flag.VisitAll(func(i *flag.Flag) {
+		this.configs[i.Name] = i.Value.String()
+	})
 }
 
 func (this *ConfigClass) parseJson(arr []string, length int) (map[string]interface{}, error) {
