@@ -146,7 +146,7 @@ func (this *ConfigClass) parseYaml(arr []string, length int) (map[interface{}]in
 	return temp, nil
 }
 
-func (this *ConfigClass) MergeFlag(f flag.Flag) {
+func (this *ConfigClass) MergeFlag() {
 	flag.VisitAll(func(i *flag.Flag) {
 		this.configs[i.Name] = i.Value.String()
 	})
