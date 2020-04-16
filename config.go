@@ -134,20 +134,29 @@ func (this *ConfigClass) MustLoadJsonConfig(config Configuration) {
 	}
 }
 
+type NotExistError struct {
+
+}
+
+func (errorInstance *NotExistError) Error() string {
+	return `not exist`
+}
+
 func (this *ConfigClass) parseYaml(arr []string, length int) (map[interface{}]interface{}, error) {
 	temp, ok := this.configs[arr[1]].(map[interface{}]interface{})
 	if !ok {
-		return nil, errors.New(`parse error`)
+		return nil, &NotExistError{}
 	}
 	for _, v := range arr[2 : length-1] {
 		temp, ok = temp[v].(map[interface{}]interface{})
 		if !ok {
-			return nil, errors.New(`parse error`)
+			return nil, &NotExistError{}
 		}
 	}
 	return temp, nil
 }
 
+// merge命令行参数
 func (this *ConfigClass) MustMergeFlag() {
 	result, err := Parse(os.Args[1:])
 	if err != nil {
@@ -161,228 +170,265 @@ func (this *ConfigClass) MustMergeFlag() {
 func (this *ConfigClass) parseJson(arr []string, length int) (map[string]interface{}, error) {
 	temp, ok := this.configs[arr[1]].(map[string]interface{})
 	if !ok {
-		return nil, errors.New(`parse error`)
+		return nil, &NotExistError{}
 	}
 	for _, v := range arr[2 : length-1] {
 		temp, ok = temp[v].(map[string]interface{})
 		if !ok {
-			return nil, errors.New(`parse error`)
+			return nil, &NotExistError{}
 		}
 	}
 	return temp, nil
 }
 
-func (this *ConfigClass) GetString(str string) string {
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			return ``
-		}
-		if length == 2 {
-			result, _ := go_reflect.Reflect.ToString(this.configs[arr[1]])
-			return result
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				return ``
-			}
-			result, _ := go_reflect.Reflect.ToString(temp[arr[length-1]])
-			return result
-		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				return ``
-			}
-			result, _ := go_reflect.Reflect.ToString(temp[arr[length-1]])
-			return result
-		}
+func (this *ConfigClass) MustGetStringDefault(str string, default_ string) string {
+	result, err := this.GetStringDefault(str, default_)
+	if err != nil {
+		panic(err)
 	}
-	result, _ := go_reflect.Reflect.ToString(this.configs[str])
 	return result
 }
 
-func (this *ConfigClass) GetInt(str string) int {
+func (this *ConfigClass) GetStringDefault(str string, default_ string) (string, error) {
+	result, err := this.GetString(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
+		} else {
+			return ``, err
+		}
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) findTarget(str string) (interface{}, error) {
+	target := this.configs[str]
 	if strings.HasPrefix(str, `/`) {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
 		if length <= 1 {
-			return 0
+			return ``, errors.New(`path error`)
 		}
 		if length == 2 {
-			result, _ := go_reflect.Reflect.ToInt(this.configs[arr[1]])
-			return result
-		}
-		if this.loadType == YAML_TYPE {
+			target = this.configs[arr[1]]
+		} else if this.loadType == YAML_TYPE {
 			temp, err := this.parseYaml(arr, length)
 			if err != nil {
-				return 0
+				return ``, err
 			}
-			result, _ := go_reflect.Reflect.ToInt(temp[arr[length-1]])
-			return result
+			target = temp[arr[length-1]]
 		} else {
 			temp, err := this.parseJson(arr, length)
 			if err != nil {
-				return 0
+				return ``, err
 			}
-			result, _ := go_reflect.Reflect.ToInt(temp[arr[length-1]])
-			return result
+			target = temp[arr[length-1]]
 		}
 	}
-	result, _ := go_reflect.Reflect.ToInt(this.configs[str])
+	if target == nil {
+		return nil, &NotExistError{}
+	}
+	return target, nil
+}
+
+func (this *ConfigClass) MustGetString(str string) string {
+	result, err := this.GetString(str)
+	if err != nil {
+		panic(err)
+	}
 	return result
 }
 
-func (this *ConfigClass) GetInt64(str string) int64 {
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			return 0
-		}
-		if length == 2 {
-			result, _ := go_reflect.Reflect.ToInt64(this.configs[arr[1]])
-			return result
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				return 0
-			}
-			result, _ := go_reflect.Reflect.ToInt64(temp[arr[length-1]])
-			return result
-		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				return 0
-			}
-			result, _ := go_reflect.Reflect.ToInt64(temp[arr[length-1]])
-			return result
-		}
+func (this *ConfigClass) GetString(str string) (string, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return ``, err
 	}
-	result, _ := go_reflect.Reflect.ToInt64(this.configs[str])
+	result, err := go_reflect.Reflect.ToString(target)
+	if err != nil {
+		return ``, err
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) MustGetIntDefault(str string, default_ int) int {
+	result, err := this.GetIntDefault(str, default_)
+	if err != nil {
+		panic(err)
+	}
 	return result
 }
 
-func (this *ConfigClass) GetUint64(str string) uint64 {
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			return 0
-		}
-		if length == 2 {
-			result, _ := go_reflect.Reflect.ToUint64(this.configs[arr[1]])
-			return result
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				return 0
-			}
-			result, _ := go_reflect.Reflect.ToUint64(temp[arr[length-1]])
-			return result
+func (this *ConfigClass) GetIntDefault(str string, default_ int) (int, error) {
+	result, err := this.GetInt(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
 		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				return 0
-			}
-			result, _ := go_reflect.Reflect.ToUint64(temp[arr[length-1]])
-			return result
+			return 0, err
 		}
 	}
-	result, _ := go_reflect.Reflect.ToUint64(this.configs[str])
+	return result, nil
+}
+
+func (this *ConfigClass) MustGetInt(str string) int {
+	result, err := this.GetInt(str)
+	if err != nil {
+		panic(err)
+	}
 	return result
 }
 
-func (this *ConfigClass) GetBool(str string) bool {
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			return false
-		}
-		if length == 2 {
-			result, _ := go_reflect.Reflect.ToBool(this.configs[arr[1]])
-			return result
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				return false
-			}
-			result, _ := go_reflect.Reflect.ToBool(temp[arr[length-1]])
-			return result
-		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				return false
-			}
-			result, _ := go_reflect.Reflect.ToBool(temp[arr[length-1]])
-			return result
-		}
+func (this *ConfigClass) GetInt(str string) (int, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return 0, err
 	}
-	result, _ := go_reflect.Reflect.ToBool(this.configs[str])
+	result, err := go_reflect.Reflect.ToInt(target)
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) MustGetInt64Default(str string, default_ int64) int64 {
+	result, err := this.GetInt64Default(str, default_)
+	if err != nil {
+		panic(err)
+	}
 	return result
 }
 
-func (this *ConfigClass) GetFloat64(str string) float64 {
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			return 0
-		}
-		if length == 2 {
-			result, _ := go_reflect.Reflect.ToFloat64(this.configs[arr[1]])
-			return result
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				return 0
-			}
-			result, _ := go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
-			return result
+func (this *ConfigClass) GetInt64Default(str string, default_ int64) (int64, error) {
+	result, err := this.GetInt64(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
 		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				return 0
-			}
-			result, _ := go_reflect.Reflect.ToFloat64(temp[arr[length-1]])
-			return result
+			return 0, err
 		}
 	}
-	result, _ := go_reflect.Reflect.ToFloat64(this.configs[str])
+	return result, nil
+}
+
+func (this *ConfigClass) MustGetInt64(str string) int64 {
+	result, err := this.GetInt64(str)
+	if err != nil {
+		panic(err)
+	}
 	return result
 }
 
-func (this *ConfigClass) Get(str string) interface{} {
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			return nil
-		}
-		if length == 2 {
-			return this.configs[arr[1]]
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				return nil
-			}
-			return temp[arr[length-1]]
+func (this *ConfigClass) GetInt64(str string) (int64, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return 0, err
+	}
+	result, err := go_reflect.Reflect.ToInt64(target)
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) MustGetUint64Default(str string, default_ uint64) uint64 {
+	result, err := this.GetUint64Default(str, default_)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func (this *ConfigClass) GetUint64Default(str string, default_ uint64) (uint64, error) {
+	result, err := this.GetUint64(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
 		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				return nil
-			}
-			return temp[arr[length-1]]
+			return 0, err
 		}
 	}
-	return this.configs[str]
+	return result, nil
+}
+
+func (this *ConfigClass) GetUint64(str string) (uint64, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return 0, err
+	}
+	result, err := go_reflect.Reflect.ToUint64(target)
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) MustGetBoolDefault(str string, default_ bool) bool {
+	result, err := this.GetBoolDefault(str, default_)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func (this *ConfigClass) GetBoolDefault(str string, default_ bool) (bool, error) {
+	result, err := this.GetBool(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
+		} else {
+			return false, err
+		}
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) GetBool(str string) (bool, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return false, err
+	}
+	result, err := go_reflect.Reflect.ToBool(target)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) MustGetFloat64Default(str string, default_ float64) float64 {
+	result, err := this.GetFloat64Default(str, default_)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func (this *ConfigClass) GetFloat64Default(str string, default_ float64) (float64, error) {
+	result, err := this.GetFloat64(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
+		} else {
+			return 0, err
+		}
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) GetFloat64(str string) (float64, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return 0, err
+	}
+	result, err := go_reflect.Reflect.ToFloat64(target)
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (this *ConfigClass) Get(str string) (interface{}, error) {
+	return this.findTarget(str)
 }
 
 func (this *ConfigClass) GetAll() interface{} {
@@ -390,47 +436,50 @@ func (this *ConfigClass) GetAll() interface{} {
 }
 
 func (this *ConfigClass) MustGetMap(str string) map[string]interface{} {
-	result := map[string]interface{}{}
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			panic(`path error`)
-		}
-		if length == 2 {
-			return this.MustGetMap(arr[1])
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				panic(err)
-			}
-			temp1 := temp[arr[length-1]].(map[interface{}]interface{})
-			for k, v := range temp1 {
-				result[go_reflect.Reflect.MustToString(k)] = v
-			}
-			return result
-		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				panic(err)
-			}
-			return temp[arr[length-1]].(map[string]interface{})
-		}
+	map_, err := this.GetMap(str)
+	if err != nil {
+		panic(err)
+	}
+	return map_
+}
+
+func (this *ConfigClass) GetMap(str string) (map[string]interface{}, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return nil, err
 	}
 
+	result := map[string]interface{}{}
 	if this.loadType == YAML_TYPE {
-		temp := this.configs[str].(map[interface{}]interface{})
+		temp, ok := target.(map[interface{}]interface{})
+		if !ok {
+			return nil, errors.New(`cast error`)
+		}
 		for k, v := range temp {
-			result[go_reflect.Reflect.MustToString(k)] = v
+			key, err := go_reflect.Reflect.ToString(k)
+			if err != nil {
+				return nil, err
+			}
+			result[key] = v
 		}
 	} else {
-		result = this.configs[str].(map[string]interface{})
+		result_, ok := target.(map[string]interface{})
+		if !ok {
+			return nil, errors.New(`cast error`)
+		}
+		result = result_
 	}
-	return result
+	return result, nil
 }
 
 func (this *ConfigClass) MustGetStruct(str string, s interface{}) {
+	err := this.GetStruct(str, s)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (this *ConfigClass) GetStruct(str string, s interface{}) error {
 	config := &mapstructure.DecoderConfig{
 		WeaklyTypedInput: true,
 		TagName:          "json",
@@ -439,40 +488,38 @@ func (this *ConfigClass) MustGetStruct(str string, s interface{}) {
 
 	decoder, err := mapstructure.NewDecoder(config)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	err = decoder.Decode(this.MustGetMap(str))
+	map_, err := this.GetMap(str)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	err = decoder.Decode(map_)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (this *ConfigClass) MustGetSlice(str string) []interface{} {
-	if strings.HasPrefix(str, `/`) {
-		arr := strings.Split(str, `/`)
-		length := len(arr)
-		if length <= 1 {
-			panic(`path error`)
-		}
-		if length == 2 {
-			return this.configs[arr[1]].([]interface{})
-		}
-		if this.loadType == YAML_TYPE {
-			temp, err := this.parseYaml(arr, length)
-			if err != nil {
-				panic(err)
-			}
-			return temp[arr[length-1]].([]interface{})
-		} else {
-			temp, err := this.parseJson(arr, length)
-			if err != nil {
-				panic(err)
-			}
-			return temp[arr[length-1]].([]interface{})
-		}
+	result, err := this.GetSlice(str)
+	if err != nil {
+		panic(err)
 	}
-	return this.configs[str].([]interface{})
+	return result
+}
+
+func (this *ConfigClass) GetSlice(str string) ([]interface{}, error) {
+	target, err := this.findTarget(str)
+	if err != nil {
+		return nil, err
+	}
+	result, ok := target.([]interface{})
+	if !ok {
+		return nil, errors.New(`cast error`)
+	}
+	return result, nil
 }
 
 func (this *ConfigClass) MustGetStringSlice(str string) []string {
