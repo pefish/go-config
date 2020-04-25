@@ -5,7 +5,6 @@ import (
 )
 
 func Parse(arguments []string) (map[string]string, error) {
-
 	result := map[string]string{}
 	for {
 		seen, err := parseOne(result, &arguments)

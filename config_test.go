@@ -1,6 +1,7 @@
 package go_config
 
 import (
+	"flag"
 	"fmt"
 	"testing"
 )
@@ -15,6 +16,38 @@ func TestConfigClass_LoadYamlConfig(t *testing.T) {
 	}{}
 	Config.MustGetStruct(`test`, &a)
 	if a.Haha != `a` {
+		t.Error()
+	}
+}
+
+func TestConfigClass_LoadYamlConfig1(t *testing.T) {
+	err := Config.LoadYamlConfig(Configuration{
+		ConfigFilepath: "",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	a := struct {
+		Haha string `json:"haha"`
+	}{}
+	err = Config.GetStruct(`test`, &a)
+	if err == nil || err.Error() != "not exist"{
+		t.Error()
+	}
+}
+
+func TestConfigClass_LoadYamlConfig3(t *testing.T) {
+	flagSet := flag.NewFlagSet("test", flag.ExitOnError)
+	flagSet.String("config", "", "path to config file")
+	flagSet.String("name", "pefish", "listener name")
+	flagSet.Bool("abc", true, "abc")
+
+	Config.MustLoadYamlConfig(Configuration{
+		ConfigFilepath: `./test/test.json`,
+		SecretFilepath: `./test/test.yaml`,
+	})
+	Config.MergeFlagSet(flagSet)
+	if result, err := Config.GetBool("abc"); err != nil || result != true {
 		t.Error()
 	}
 }
