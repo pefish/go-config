@@ -47,6 +47,9 @@ func TestConfigClass_LoadYamlConfig3(t *testing.T) {
 		SecretFilepath: `./test/test.yaml`,
 	})
 	Config.MergeFlagSet(flagSet)
+	if result, err := Config.GetBool("abc"); err != nil || result != true {
+		t.Error(result, err)
+	}
 	if result, err := Config.GetString("name"); err != nil || result != "test" {
 		t.Error(result, err)
 	}

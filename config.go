@@ -167,9 +167,17 @@ func (configInstance *ConfigClass) parseYaml(arr []string, length int) (map[inte
 	return temp, nil
 }
 
+// merge flag config
+// priority: flag > config file > flag default value
 func (configInstance *ConfigClass) MergeFlagSet(flagSet *flag.FlagSet) {
 	flagSet.Visit(func(f *flag.Flag) {
 		configInstance.configs[f.Name] = f.Value.String()
+	})
+
+	flagSet.VisitAll(func(f *flag.Flag) {
+		if _, ok := configInstance.configs[f.Name]; !ok {
+			configInstance.configs[f.Name] = f.DefValue
+		}
 	})
 }
 
