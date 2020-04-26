@@ -449,12 +449,24 @@ func (configInstance *ConfigClass) GetAll() interface{} {
 	return configInstance.configs
 }
 
-func (configInstance *ConfigClass) MustGetMap(str string) map[string]interface{} {
-	map_, err := configInstance.GetMap(str)
+func (configInstance *ConfigClass) MustGetMapDefault(str string, default_ map[string]interface{}) map[string]interface{} {
+	map_, err := configInstance.GetMapDefault(str, default_)
 	if err != nil {
 		panic(err)
 	}
 	return map_
+}
+
+func (configInstance *ConfigClass) GetMapDefault(str string, default_ map[string]interface{}) (map[string]interface{}, error) {
+	result, err := configInstance.GetMap(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
+		} else {
+			return nil, err
+		}
+	}
+	return result, nil
 }
 
 func (configInstance *ConfigClass) GetMap(str string) (map[string]interface{}, error) {
@@ -516,12 +528,24 @@ func (configInstance *ConfigClass) GetStruct(str string, s interface{}) error {
 	return nil
 }
 
-func (configInstance *ConfigClass) MustGetSlice(str string) []interface{} {
-	result, err := configInstance.GetSlice(str)
+func (configInstance *ConfigClass) MustGetSliceDefault(str string, default_ []interface{}) []interface{} {
+	result, err := configInstance.GetSliceDefault(str, default_)
 	if err != nil {
 		panic(err)
 	}
 	return result
+}
+
+func (configInstance *ConfigClass) GetSliceDefault(str string, default_ []interface{}) ([]interface{}, error) {
+	result, err := configInstance.GetSlice(str)
+	if err != nil {
+		if _, ok := err.(*NotExistError); ok {
+			return default_, nil
+		} else {
+			return nil, err
+		}
+	}
+	return result, nil
 }
 
 func (configInstance *ConfigClass) GetSlice(str string) ([]interface{}, error) {
@@ -534,22 +558,4 @@ func (configInstance *ConfigClass) GetSlice(str string) ([]interface{}, error) {
 		return nil, errors.New(`cast error`)
 	}
 	return result, nil
-}
-
-func (configInstance *ConfigClass) MustGetStringSlice(str string) []string {
-	var result []string
-	results := configInstance.MustGetSlice(str)
-	for _, v := range results {
-		result = append(result, v.(string))
-	}
-	return result
-}
-
-func (configInstance *ConfigClass) MustGetUint64Slice(str string) []uint64 {
-	var result []uint64
-	results := configInstance.MustGetSlice(str)
-	for _, v := range results {
-		result = append(result, go_reflect.Reflect.MustToUint64(v))
-	}
-	return result
 }

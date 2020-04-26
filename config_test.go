@@ -141,8 +141,15 @@ func TestConfigClass_GetMap(t *testing.T) {
 	Config.MustLoadJsonConfig(Configuration{
 		ConfigFilepath: `./test/test.json`,
 	})
-	map_ := Config.MustGetMap(`/test3/test2`)
+	map_ := Config.MustGetMapDefault(`/test3/test2`, nil)
 	if map_[`test3`].(float64) != 45 {
+		t.Error()
+	}
+
+	map1_ := Config.MustGetMapDefault(`/test3/test225235`, map[string]interface{}{
+		"haha111": "36573",
+	})
+	if map1_[`haha111`].(string) != "36573" {
 		t.Error()
 	}
 }
@@ -151,7 +158,7 @@ func TestConfigClass_GetSlice(t *testing.T) {
 	Config.MustLoadJsonConfig(Configuration{
 		ConfigFilepath: `./test/test.json`,
 	})
-	slice_ := Config.MustGetSlice(`/test3/test2/test8`)
+	slice_ := Config.MustGetSliceDefault(`/test3/test2/test8`, nil)
 	if slice_[0].(float64) != 1 {
 		t.Error()
 	}
