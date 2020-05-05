@@ -3,6 +3,7 @@ package go_config
 import (
 	"flag"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -31,7 +32,7 @@ func TestConfigClass_LoadYamlConfig1(t *testing.T) {
 		Haha string `json:"haha"`
 	}{}
 	err = Config.GetStruct(`test`, &a)
-	if err == nil || err.Error() != "not exist"{
+	if err == nil || !strings.Contains(err.Error(), "not exist"){
 		t.Error()
 	}
 }

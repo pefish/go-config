@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pefish/go-reflect"
 	"gopkg.in/yaml.v2"
@@ -146,22 +147,26 @@ func (configInstance *ConfigClass) LoadJsonConfig(config Configuration) error {
 }
 
 type NotExistError struct {
-
+	path string
 }
 
 func (errorInstance *NotExistError) Error() string {
-	return `not exist`
+	return fmt.Sprintf(`config of path [%s] not exist`, errorInstance.path)
 }
 
-func (configInstance *ConfigClass) parseYaml(arr []string, length int) (map[interface{}]interface{}, error) {
+func NewNotExistError(path string) *NotExistError {
+	return &NotExistError{path:path}
+}
+
+func (configInstance *ConfigClass) parseYaml(arr []string, length int, path string) (map[interface{}]interface{}, error) {
 	temp, ok := configInstance.configs[arr[1]].(map[interface{}]interface{})
 	if !ok {
-		return nil, &NotExistError{}
+		return nil, NewNotExistError(path)
 	}
 	for _, v := range arr[2 : length-1] {
 		temp, ok = temp[v].(map[interface{}]interface{})
 		if !ok {
-			return nil, &NotExistError{}
+			return nil, NewNotExistError(path)
 		}
 	}
 	return temp, nil
@@ -181,15 +186,15 @@ func (configInstance *ConfigClass) MergeFlagSet(flagSet *flag.FlagSet) {
 	})
 }
 
-func (configInstance *ConfigClass) parseJson(arr []string, length int) (map[string]interface{}, error) {
+func (configInstance *ConfigClass) parseJson(arr []string, length int, path string) (map[string]interface{}, error) {
 	temp, ok := configInstance.configs[arr[1]].(map[string]interface{})
 	if !ok {
-		return nil, &NotExistError{}
+		return nil, NewNotExistError(path)
 	}
 	for _, v := range arr[2 : length-1] {
 		temp, ok = temp[v].(map[string]interface{})
 		if !ok {
-			return nil, &NotExistError{}
+			return nil, NewNotExistError(path)
 		}
 	}
 	return temp, nil
@@ -226,13 +231,13 @@ func (configInstance *ConfigClass) findTarget(str string) (interface{}, error) {
 		if length == 2 {
 			target = configInstance.configs[arr[1]]
 		} else if configInstance.loadType == YAML_TYPE {
-			temp, err := configInstance.parseYaml(arr, length)
+			temp, err := configInstance.parseYaml(arr, length, str)
 			if err != nil {
 				return ``, err
 			}
 			target = temp[arr[length-1]]
 		} else {
-			temp, err := configInstance.parseJson(arr, length)
+			temp, err := configInstance.parseJson(arr, length, str)
 			if err != nil {
 				return ``, err
 			}
@@ -240,7 +245,7 @@ func (configInstance *ConfigClass) findTarget(str string) (interface{}, error) {
 		}
 	}
 	if target == nil {
-		return nil, &NotExistError{}
+		return nil, NewNotExistError(str)
 	}
 	return target, nil
 }
