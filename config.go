@@ -263,10 +263,7 @@ func (configInstance *ConfigClass) GetString(str string) (string, error) {
 	if err != nil {
 		return ``, err
 	}
-	result, err := go_reflect.Reflect.ToString(target)
-	if err != nil {
-		return ``, err
-	}
+	result := go_reflect.Reflect.ToString(target)
 	return result, nil
 }
 
@@ -487,10 +484,7 @@ func (configInstance *ConfigClass) GetMap(str string) (map[string]interface{}, e
 			return nil, errors.New(`cast error`)
 		}
 		for k, v := range temp {
-			key, err := go_reflect.Reflect.ToString(k)
-			if err != nil {
-				return nil, err
-			}
+			key := go_reflect.Reflect.ToString(k)
 			result[key] = v
 		}
 	} else {
