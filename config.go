@@ -459,6 +459,14 @@ func (configInstance *ConfigClass) MustGetMapDefault(str string, default_ map[st
 	return map_
 }
 
+func (configInstance *ConfigClass) MustGetMap(str string) map[string]interface{} {
+	map_, err := configInstance.GetMap(str)
+	if err != nil {
+		panic(err)
+	}
+	return map_
+}
+
 func (configInstance *ConfigClass) GetMapDefault(str string, default_ map[string]interface{}) (map[string]interface{}, error) {
 	result, err := configInstance.GetMap(str)
 	if err != nil {
