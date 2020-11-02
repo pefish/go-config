@@ -1,140 +1,66 @@
 package go_config
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pefish/go-reflect"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"strings"
 )
 
-const (
-	YAML_TYPE = `yaml`
-	JSON_TYPE = `json`
-)
-
 type ConfigClass struct {
-	configs  map[string]interface{}
-	loadType string
+	flagSetConfigs map[string]interface{}
+	envConfigs     map[string]interface{}
+	configs        map[string]interface{}
 }
 
 var Config = ConfigClass{
-	configs: map[string]interface{}{},
-	loadType: YAML_TYPE,
+	configs:        make(map[string]interface{}, 5),
+	flagSetConfigs: make(map[string]interface{}, 2),
+	envConfigs:     make(map[string]interface{}, 2),
 }
 
 type Configuration struct {
 	ConfigFilepath string
 	SecretFilepath string
-	ConfigEnvName  string
-	SecretEnvName  string
 }
 
-func (configInstance *ConfigClass) MustLoadYamlConfig(config Configuration) {
-	err := configInstance.LoadYamlConfig(config)
+func (configInstance *ConfigClass) MustLoadConfig(config Configuration) {
+	err := configInstance.LoadConfig(config)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (configInstance *ConfigClass) LoadYamlConfig(config Configuration) error {
-	configInstance.loadType = YAML_TYPE
-
-	configFile := ``
+func (configInstance *ConfigClass) LoadConfig(config Configuration) error {
 	configMap := make(map[string]interface{})
-	if config.ConfigEnvName != `` || config.ConfigFilepath != `` {
-		if config.ConfigEnvName != `` {
-			configFile = os.Getenv(config.ConfigEnvName)
-		} else if config.ConfigFilepath != `` {
-			configFile = config.ConfigFilepath
+	if config.ConfigFilepath != `` {
+		if !strings.HasSuffix(config.ConfigFilepath, "yaml") {
+			return errors.New("only support yaml file")
 		}
-		if configFile != `` {
-			bytes, err := ioutil.ReadFile(configFile)
-			if err == nil {
-				err = yaml.Unmarshal(bytes, &configMap)
-				if err != nil {
-					return err
-				}
+		bytes, err := ioutil.ReadFile(config.ConfigFilepath)
+		if err == nil {
+			err = yaml.Unmarshal(bytes, &configMap)
+			if err != nil {
+				return errors.WithMessage(err, "file format error")
 			}
 		}
 	}
 
-	secretFile := ``
 	secretMap := make(map[string]interface{})
-	if config.SecretEnvName != `` || config.SecretFilepath != `` {
-		if config.SecretEnvName != `` {
-			secretFile = os.Getenv(config.SecretEnvName)
-		} else if config.SecretFilepath != `` {
-			secretFile = config.SecretFilepath
+	if config.SecretFilepath != `` {
+		if !strings.HasSuffix(config.SecretFilepath, "yaml") {
+			return errors.New("only support yaml file")
 		}
-		if secretFile != `` {
-			bytes, err := ioutil.ReadFile(secretFile)
-			if err == nil {
-				err = yaml.Unmarshal(bytes, &secretMap)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	configInstance.configs = configMap
-	for key, val := range secretMap {
-		configInstance.configs[key] = val
-	}
-	return nil
-}
-
-func (configInstance *ConfigClass) MustLoadJsonConfig(config Configuration) {
-	err := configInstance.LoadJsonConfig(config)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (configInstance *ConfigClass) LoadJsonConfig(config Configuration) error {
-	configInstance.loadType = JSON_TYPE
-	configFile := ``
-	configMap := make(map[string]interface{})
-	if config.ConfigEnvName != `` || config.ConfigFilepath != `` {
-		if config.ConfigEnvName != `` {
-			configFile = os.Getenv(config.ConfigEnvName)
-		} else if config.ConfigFilepath != `` {
-			configFile = config.ConfigFilepath
-		}
-		if configFile != `` {
-			bytes, err := ioutil.ReadFile(configFile)
-			if err == nil {
-				var result interface{}
-				if err := json.Unmarshal(bytes, &result); err != nil {
-					return err
-				}
-				configMap = result.(map[string]interface{})
-			}
-		}
-	}
-
-	secretFile := ``
-	secretMap := make(map[string]interface{})
-	if config.SecretEnvName != `` || config.SecretFilepath != `` {
-		if config.SecretEnvName != `` {
-			secretFile = os.Getenv(config.SecretEnvName)
-		} else if config.SecretFilepath != `` {
-			secretFile = config.SecretFilepath
-		}
-		if secretFile != `` {
-			bytes, err := ioutil.ReadFile(secretFile)
-			if err == nil {
-				var result interface{}
-				if err := json.Unmarshal(bytes, &result); err != nil {
-					return err
-				}
-				secretMap = result.(map[string]interface{})
+		bytes, err := ioutil.ReadFile(config.SecretFilepath)
+		if err == nil {
+			err = yaml.Unmarshal(bytes, &secretMap)
+			if err != nil {
+				return errors.WithMessage(err, "file format error")
 			}
 		}
 	}
@@ -155,7 +81,7 @@ func (errorInstance *NotExistError) Error() string {
 }
 
 func NewNotExistError(path string) *NotExistError {
-	return &NotExistError{path:path}
+	return &NotExistError{path: path}
 }
 
 func (configInstance *ConfigClass) parseYaml(arr []string, length int, path string) (map[interface{}]interface{}, error) {
@@ -174,30 +100,39 @@ func (configInstance *ConfigClass) parseYaml(arr []string, length int, path stri
 
 // merge flag config
 // priority: flag > config file > flag default value
+// just cover
 func (configInstance *ConfigClass) MergeFlagSet(flagSet *flag.FlagSet) {
 	flagSet.Visit(func(f *flag.Flag) {
+		configInstance.flagSetConfigs[f.Name] = f.Value.String()
 		configInstance.configs[f.Name] = f.Value.String()
 	})
 
 	flagSet.VisitAll(func(f *flag.Flag) {
 		if _, ok := configInstance.configs[f.Name]; !ok {
+			configInstance.flagSetConfigs[f.Name] = f.DefValue
 			configInstance.configs[f.Name] = f.DefValue
 		}
 	})
 }
 
-func (configInstance *ConfigClass) parseJson(arr []string, length int, path string) (map[string]interface{}, error) {
-	temp, ok := configInstance.configs[arr[1]].(map[string]interface{})
-	if !ok {
-		return nil, NewNotExistError(path)
-	}
-	for _, v := range arr[2 : length-1] {
-		temp, ok = temp[v].(map[string]interface{})
-		if !ok {
-			return nil, NewNotExistError(path)
+// merge envs
+// priority: flag > envs > config file > flag default value
+func (configInstance *ConfigClass) MergeEnvs(envKeyPair map[string]string) {
+	for envName, keyName := range envKeyPair {
+		envValue := os.Getenv(envName)
+		if envValue != "" {
+			configInstance.envConfigs[keyName] = envValue
 		}
 	}
-	return temp, nil
+
+	for key, value := range configInstance.envConfigs {
+		configInstance.configs[key] = value
+	}
+
+	for key, value := range configInstance.flagSetConfigs {
+		configInstance.configs[key] = value
+	}
+
 }
 
 func (configInstance *ConfigClass) MustGetStringDefault(str string, default_ string) string {
@@ -230,14 +165,8 @@ func (configInstance *ConfigClass) findTarget(str string) (interface{}, error) {
 		}
 		if length == 2 {
 			target = configInstance.configs[arr[1]]
-		} else if configInstance.loadType == YAML_TYPE {
-			temp, err := configInstance.parseYaml(arr, length, str)
-			if err != nil {
-				return ``, err
-			}
-			target = temp[arr[length-1]]
 		} else {
-			temp, err := configInstance.parseJson(arr, length, str)
+			temp, err := configInstance.parseYaml(arr, length, str)
 			if err != nil {
 				return ``, err
 			}
@@ -447,8 +376,16 @@ func (configInstance *ConfigClass) Get(str string) (interface{}, error) {
 	return configInstance.findTarget(str)
 }
 
-func (configInstance *ConfigClass) GetAll() interface{} {
+func (configInstance *ConfigClass) Configs() map[string]interface{} {
 	return configInstance.configs
+}
+
+func (configInstance *ConfigClass) EnvConfigs() map[string]interface{} {
+	return configInstance.envConfigs
+}
+
+func (configInstance *ConfigClass) FlagSetConfigs() map[string]interface{} {
+	return configInstance.flagSetConfigs
 }
 
 func (configInstance *ConfigClass) MustGetMapDefault(str string, default_ map[string]interface{}) map[string]interface{} {
@@ -486,21 +423,13 @@ func (configInstance *ConfigClass) GetMap(str string) (map[string]interface{}, e
 	}
 
 	result := map[string]interface{}{}
-	if configInstance.loadType == YAML_TYPE {
-		temp, ok := target.(map[interface{}]interface{})
-		if !ok {
-			return nil, errors.New(`cast error`)
-		}
-		for k, v := range temp {
-			key := go_reflect.Reflect.ToString(k)
-			result[key] = v
-		}
-	} else {
-		result_, ok := target.(map[string]interface{})
-		if !ok {
-			return nil, errors.New(`cast error`)
-		}
-		result = result_
+	temp, ok := target.(map[interface{}]interface{})
+	if !ok {
+		return nil, errors.New(`cast error`)
+	}
+	for k, v := range temp {
+		key := go_reflect.Reflect.ToString(k)
+		result[key] = v
 	}
 	return result, nil
 }

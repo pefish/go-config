@@ -2,27 +2,27 @@ package go_config
 
 import (
 	"flag"
-	"fmt"
+	go_reflect "github.com/pefish/go-reflect"
 	"strings"
 	"testing"
+	"github.com/pefish/go-test-assert"
 )
 
-func TestConfigClass_LoadYamlConfig(t *testing.T) {
-	Config.MustLoadYamlConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
-		SecretFilepath: `./test/test.yaml`,
+func TestConfigClass_LoadConfig(t *testing.T) {
+	Config.MustLoadConfig(Configuration{
+		SecretFilepath: `./_example/test.yaml`,
 	})
 	a := struct {
 		Haha string `json:"haha"`
 	}{}
 	Config.MustGetStruct(`test`, &a)
-	if a.Haha != `a` {
+	if a.Haha != `a2` {
 		t.Error()
 	}
 }
 
 func TestConfigClass_LoadYamlConfig1(t *testing.T) {
-	err := Config.LoadYamlConfig(Configuration{
+	err := Config.LoadConfig(Configuration{
 		ConfigFilepath: "",
 	})
 	if err != nil {
@@ -43,22 +43,26 @@ func TestConfigClass_LoadYamlConfig3(t *testing.T) {
 	flagSet.String("name", "pefish", "listener name")
 	flagSet.Bool("abc", true, "abc")
 
-	Config.MustLoadYamlConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
-		SecretFilepath: `./test/test.yaml`,
+	Config.MustLoadConfig(Configuration{
+		SecretFilepath: `./_example/test.yaml`,
 	})
 	Config.MergeFlagSet(flagSet)
-	if result, err := Config.GetBool("abc"); err != nil || result != true {
-		t.Error(result, err)
-	}
-	if result, err := Config.GetString("name"); err != nil || result != "test" {
-		t.Error(result, err)
-	}
+	result, err := Config.GetBool("abc")
+	test.Equal(t, nil, err)
+	test.Equal(t, true, result)
+
+	result1, err1 := Config.GetString("name")
+	test.Equal(t, nil, err1)
+	test.Equal(t, "_example", result1)
+
+	result2, ok := Config.FlagSetConfigs()["abc"]
+	test.Equal(t, true, ok)
+	test.Equal(t, true, go_reflect.Reflect.MustToBool(result2))
 }
 
 func TestConfigClass_GetString2(t *testing.T) {
-	Config.MustLoadYamlConfig(Configuration{
-		ConfigFilepath: `./test/test.yaml`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	str := Config.MustGetString(`/test1/test2/test3`)
 	if str != `45` {
@@ -66,9 +70,8 @@ func TestConfigClass_GetString2(t *testing.T) {
 	}
 
 	str = Config.MustGetString(`/test/haha`)
-	str1 := Config.MustGetString(`/test/haha`)
-	fmt.Println(str1, `  cache`)
-	if str != `a` {
+	//fmt.Println(str1, `  cache`)
+	if str != `a2` {
 		t.Error()
 	}
 
@@ -89,8 +92,8 @@ func TestConfigClass_GetString2(t *testing.T) {
 }
 
 func TestConfigClass_GetString3(t *testing.T) {
-	Config.MustLoadJsonConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	str := Config.MustGetString(`/test1/test2/test3`)
 	if str != `45` {
@@ -98,7 +101,7 @@ func TestConfigClass_GetString3(t *testing.T) {
 	}
 
 	str = Config.MustGetString(`/test/haha`)
-	if str != `a` {
+	if str != `a2` {
 		t.Error()
 	}
 
@@ -119,8 +122,8 @@ func TestConfigClass_GetString3(t *testing.T) {
 }
 
 func TestConfigClass_GetInt2(t *testing.T) {
-	Config.MustLoadJsonConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	int_ := Config.MustGetInt(`/test1/test2/test3`)
 	if int_ != 45 {
@@ -129,8 +132,8 @@ func TestConfigClass_GetInt2(t *testing.T) {
 }
 
 func TestConfigClass_GetInt642(t *testing.T) {
-	Config.MustLoadJsonConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	int_ := Config.MustGetInt64(`/test1/test2/test3`)
 	if int_ != 45 {
@@ -139,13 +142,11 @@ func TestConfigClass_GetInt642(t *testing.T) {
 }
 
 func TestConfigClass_GetMap(t *testing.T) {
-	Config.MustLoadJsonConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	map_ := Config.MustGetMapDefault(`/test3/test2`, nil)
-	if map_[`test3`].(float64) != 45 {
-		t.Error()
-	}
+	test.Equal(t, 45, go_reflect.Reflect.MustToInt(map_[`test3`]))
 
 	map1_ := Config.MustGetMapDefault(`/test3/test225235`, map[string]interface{}{
 		"haha111": "36573",
@@ -156,18 +157,16 @@ func TestConfigClass_GetMap(t *testing.T) {
 }
 
 func TestConfigClass_GetSlice(t *testing.T) {
-	Config.MustLoadJsonConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	slice_ := Config.MustGetSliceDefault(`/test3/test2/test8`, nil)
-	if slice_[0].(float64) != 1 {
-		t.Error()
-	}
+	test.Equal(t, 1, go_reflect.Reflect.MustToInt(slice_[0]))
 }
 
 func TestConfigClass_GetBool(t *testing.T) {
-	Config.MustLoadJsonConfig(Configuration{
-		ConfigFilepath: `./test/test.json`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	_, err := Config.GetBool(`xixi`)
 	if _, ok := err.(*NotExistError); !ok {
@@ -189,14 +188,14 @@ func TestConfigClass_GetString(t *testing.T) {
 		want   string
 	}{
 		{
-			name: `test GetString`,
+			name: `_example GetString`,
 			fields: fields{
 				map[string]interface{}{
-					`test`: `haha`,
+					`_example`: `haha`,
 				},
 			},
 			args: args{
-				`test`,
+				`_example`,
 			},
 			want: `haha`,
 		},
@@ -214,8 +213,8 @@ func TestConfigClass_GetString(t *testing.T) {
 }
 
 func TestConfigClass_MustGetStringDefault(t *testing.T) {
-	Config.MustLoadYamlConfig(Configuration{
-		ConfigFilepath: `./test/test.yaml`,
+	Config.MustLoadConfig(Configuration{
+		ConfigFilepath: `./_example/test.yaml`,
 	})
 	str := Config.MustGetStringDefault(`/test1/test2/test4577`, `123`)
 	if str != `123` {
