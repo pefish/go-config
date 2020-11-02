@@ -13,29 +13,41 @@ func main() {
 	})
 	var flagSet flag.FlagSet
 	flagSet.String("abcd", "haha", "")
+	flagSet.String("abcde", "123456", "")
 	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
 		panic(err)
 	}
 	go_config.Config.MergeFlagSet(&flagSet)
 	go_config.Config.MergeEnvs(map[string]string{
-		"ABC": "abcd",
+		"ABCD": "abcd",
+		"ABCDE": "abcde",
 	})
 	fmt.Println(go_config.Config.MustGetString("abcd"))
+	fmt.Println(go_config.Config.MustGetString("abcde"))
 }
 
 // go run ./_example/
 // Output:
 // 123
+// 123456
 
-// go run ./_example/ --abc=124
+// go run ./_example/ --abcd=124
 // Output:
 // 124
+// 123456
 
-// ABC=125 go run ./_example/
+// ABCD=125 go run ./_example/
 // Output:
 // 125
+// 123456
 
-// ABC=125 go run ./_example/ --abc=126
+// ABCD=125 go run ./_example/ --abcd=126
 // Output:
 // 126
+// 123456
+
+// ABCDE=127 go run ./_example/
+// Output:
+// 123
+// 127

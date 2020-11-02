@@ -14,13 +14,17 @@ import (
 
 type ConfigClass struct {
 	flagSetConfigs map[string]interface{}
+	flagSetDefaultConfigs map[string]interface{}
 	envConfigs     map[string]interface{}
+	fileConfigs     map[string]interface{}
 	configs        map[string]interface{}
 }
 
 var Config = ConfigClass{
 	configs:        make(map[string]interface{}, 5),
+	fileConfigs:        make(map[string]interface{}, 5),
 	flagSetConfigs: make(map[string]interface{}, 2),
+	flagSetDefaultConfigs: make(map[string]interface{}, 2),
 	envConfigs:     make(map[string]interface{}, 2),
 }
 
@@ -65,9 +69,9 @@ func (configInstance *ConfigClass) LoadConfig(config Configuration) error {
 		}
 	}
 
-	configInstance.configs = configMap
+	configInstance.fileConfigs = configMap
 	for key, val := range secretMap {
-		configInstance.configs[key] = val
+		configInstance.fileConfigs[key] = val
 	}
 	return nil
 }
@@ -104,15 +108,15 @@ func (configInstance *ConfigClass) parseYaml(arr []string, length int, path stri
 func (configInstance *ConfigClass) MergeFlagSet(flagSet *flag.FlagSet) {
 	flagSet.Visit(func(f *flag.Flag) {
 		configInstance.flagSetConfigs[f.Name] = f.Value.String()
-		configInstance.configs[f.Name] = f.Value.String()
 	})
 
 	flagSet.VisitAll(func(f *flag.Flag) {
-		if _, ok := configInstance.configs[f.Name]; !ok {
-			configInstance.flagSetConfigs[f.Name] = f.DefValue
-			configInstance.configs[f.Name] = f.DefValue
+		if _, ok := configInstance.flagSetConfigs[f.Name]; !ok {
+			configInstance.flagSetDefaultConfigs[f.Name] = f.DefValue
 		}
 	})
+
+	configInstance.combineConfigs()
 }
 
 // merge envs
@@ -125,14 +129,30 @@ func (configInstance *ConfigClass) MergeEnvs(envKeyPair map[string]string) {
 		}
 	}
 
+	configInstance.combineConfigs()
+
+}
+
+func (configInstance *ConfigClass) combineConfigs() {
+	for key, value := range configInstance.flagSetDefaultConfigs {
+		configInstance.configs[key] = value
+	}
+	//fmt.Println(configInstance.flagSetDefaultConfigs)
+
+	for key, value := range configInstance.fileConfigs {
+		configInstance.configs[key] = value
+	}
+	//fmt.Println(configInstance.flagSetDefaultConfigs)
+
 	for key, value := range configInstance.envConfigs {
 		configInstance.configs[key] = value
 	}
+	//fmt.Println(configInstance.envConfigs)
 
 	for key, value := range configInstance.flagSetConfigs {
 		configInstance.configs[key] = value
 	}
-
+	//fmt.Println(configInstance.flagSetConfigs)
 }
 
 func (configInstance *ConfigClass) MustGetStringDefault(str string, default_ string) string {
@@ -378,6 +398,14 @@ func (configInstance *ConfigClass) Get(str string) (interface{}, error) {
 
 func (configInstance *ConfigClass) Configs() map[string]interface{} {
 	return configInstance.configs
+}
+
+func (configInstance *ConfigClass) FlagSetDefaultConfigs() map[string]interface{} {
+	return configInstance.flagSetDefaultConfigs
+}
+
+func (configInstance *ConfigClass) FileConfigs() map[string]interface{} {
+	return configInstance.fileConfigs
 }
 
 func (configInstance *ConfigClass) EnvConfigs() map[string]interface{} {
