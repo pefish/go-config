@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-type ConfigClass struct {
+type ConfigManager struct {
 	flagSetConfigs map[string]interface{}
 	flagSetDefaultConfigs map[string]interface{}
 	envConfigs     map[string]interface{}
@@ -20,27 +20,31 @@ type ConfigClass struct {
 	configs        map[string]interface{}
 }
 
-var Config = ConfigClass{
-	configs:        make(map[string]interface{}, 5),
-	fileConfigs:        make(map[string]interface{}, 5),
-	flagSetConfigs: make(map[string]interface{}, 2),
-	flagSetDefaultConfigs: make(map[string]interface{}, 2),
-	envConfigs:     make(map[string]interface{}, 2),
-}
+var ConfigManagerInstance = NewConfigManager()
 
 type Configuration struct {
 	ConfigFilepath string
 	SecretFilepath string
 }
 
-func (configInstance *ConfigClass) MustLoadConfig(config Configuration) {
+func NewConfigManager() *ConfigManager {
+	return &ConfigManager{
+		configs:        make(map[string]interface{}, 5),
+		fileConfigs:        make(map[string]interface{}, 5),
+		flagSetConfigs: make(map[string]interface{}, 2),
+		flagSetDefaultConfigs: make(map[string]interface{}, 2),
+		envConfigs:     make(map[string]interface{}, 2),
+	}
+}
+
+func (configInstance *ConfigManager) MustLoadConfig(config Configuration) {
 	err := configInstance.LoadConfig(config)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (configInstance *ConfigClass) LoadConfig(config Configuration) error {
+func (configInstance *ConfigManager) LoadConfig(config Configuration) error {
 	configMap := make(map[string]interface{})
 	if config.ConfigFilepath != `` {
 		if !strings.HasSuffix(config.ConfigFilepath, "yaml") {
@@ -73,6 +77,7 @@ func (configInstance *ConfigClass) LoadConfig(config Configuration) error {
 	for key, val := range secretMap {
 		configInstance.fileConfigs[key] = val
 	}
+	configInstance.combineConfigs()
 	return nil
 }
 
@@ -88,7 +93,7 @@ func NewNotExistError(path string) *NotExistError {
 	return &NotExistError{path: path}
 }
 
-func (configInstance *ConfigClass) parseYaml(arr []string, length int, path string) (map[interface{}]interface{}, error) {
+func (configInstance *ConfigManager) parseYaml(arr []string, length int, path string) (map[interface{}]interface{}, error) {
 	temp, ok := configInstance.configs[arr[1]].(map[interface{}]interface{})
 	if !ok {
 		return nil, NewNotExistError(path)
@@ -105,7 +110,7 @@ func (configInstance *ConfigClass) parseYaml(arr []string, length int, path stri
 // merge flag config
 // priority: flag > config file > flag default value
 // just cover
-func (configInstance *ConfigClass) MergeFlagSet(flagSet *flag.FlagSet) {
+func (configInstance *ConfigManager) MergeFlagSet(flagSet *flag.FlagSet) {
 	flagSet.Visit(func(f *flag.Flag) {
 		configInstance.flagSetConfigs[f.Name] = f.Value.String()
 	})
@@ -115,13 +120,13 @@ func (configInstance *ConfigClass) MergeFlagSet(flagSet *flag.FlagSet) {
 			configInstance.flagSetDefaultConfigs[f.Name] = f.DefValue
 		}
 	})
-
+	//fmt.Println(configInstance.flagSetDefaultConfigs)
 	configInstance.combineConfigs()
 }
 
 // merge envs
 // priority: flag > envs > config file > flag default value
-func (configInstance *ConfigClass) MergeEnvs(envKeyPair map[string]string) {
+func (configInstance *ConfigManager) MergeEnvs(envKeyPair map[string]string) {
 	for envName, keyName := range envKeyPair {
 		envValue := os.Getenv(envName)
 		if envValue != "" {
@@ -133,11 +138,11 @@ func (configInstance *ConfigClass) MergeEnvs(envKeyPair map[string]string) {
 
 }
 
-func (configInstance *ConfigClass) combineConfigs() {
+func (configInstance *ConfigManager) combineConfigs() {
 	for key, value := range configInstance.flagSetDefaultConfigs {
 		configInstance.configs[key] = value
 	}
-	//fmt.Println(configInstance.flagSetDefaultConfigs)
+	//fmt.Println(configInstance.configs)
 
 	for key, value := range configInstance.fileConfigs {
 		configInstance.configs[key] = value
@@ -155,7 +160,7 @@ func (configInstance *ConfigClass) combineConfigs() {
 	//fmt.Println(configInstance.flagSetConfigs)
 }
 
-func (configInstance *ConfigClass) MustGetStringDefault(str string, default_ string) string {
+func (configInstance *ConfigManager) MustGetStringDefault(str string, default_ string) string {
 	result, err := configInstance.GetStringDefault(str, default_)
 	if err != nil {
 		panic(err)
@@ -163,7 +168,7 @@ func (configInstance *ConfigClass) MustGetStringDefault(str string, default_ str
 	return result
 }
 
-func (configInstance *ConfigClass) GetStringDefault(str string, default_ string) (string, error) {
+func (configInstance *ConfigManager) GetStringDefault(str string, default_ string) (string, error) {
 	result, err := configInstance.GetString(str)
 	if err != nil {
 		if _, ok := err.(*NotExistError); ok {
@@ -175,8 +180,9 @@ func (configInstance *ConfigClass) GetStringDefault(str string, default_ string)
 	return result, nil
 }
 
-func (configInstance *ConfigClass) findTarget(str string) (interface{}, error) {
+func (configInstance *ConfigManager) FindTarget(str string) (interface{}, error) {
 	target := configInstance.configs[str]
+	//fmt.Println(target)
 	if strings.HasPrefix(str, `/`) {
 		arr := strings.Split(str, `/`)
 		length := len(arr)
@@ -199,7 +205,7 @@ func (configInstance *ConfigClass) findTarget(str string) (interface{}, error) {
 	return target, nil
 }
 
-func (configInstance *ConfigClass) MustGetString(str string) string {
+func (configInstance *ConfigManager) MustGetString(str string) string {
 	result, err := configInstance.GetString(str)
 	if err != nil {
 		panic(err)
@@ -207,8 +213,8 @@ func (configInstance *ConfigClass) MustGetString(str string) string {
 	return result
 }
 
-func (configInstance *ConfigClass) GetString(str string) (string, error) {
-	target, err := configInstance.findTarget(str)
+func (configInstance *ConfigManager) GetString(str string) (string, error) {
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return ``, err
 	}
@@ -216,7 +222,7 @@ func (configInstance *ConfigClass) GetString(str string) (string, error) {
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetIntDefault(str string, default_ int) int {
+func (configInstance *ConfigManager) MustGetIntDefault(str string, default_ int) int {
 	result, err := configInstance.GetIntDefault(str, default_)
 	if err != nil {
 		panic(err)
@@ -224,7 +230,7 @@ func (configInstance *ConfigClass) MustGetIntDefault(str string, default_ int) i
 	return result
 }
 
-func (configInstance *ConfigClass) GetIntDefault(str string, default_ int) (int, error) {
+func (configInstance *ConfigManager) GetIntDefault(str string, default_ int) (int, error) {
 	result, err := configInstance.GetInt(str)
 	if err != nil {
 		if _, ok := err.(*NotExistError); ok {
@@ -236,7 +242,7 @@ func (configInstance *ConfigClass) GetIntDefault(str string, default_ int) (int,
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetInt(str string) int {
+func (configInstance *ConfigManager) MustGetInt(str string) int {
 	result, err := configInstance.GetInt(str)
 	if err != nil {
 		panic(err)
@@ -244,8 +250,8 @@ func (configInstance *ConfigClass) MustGetInt(str string) int {
 	return result
 }
 
-func (configInstance *ConfigClass) GetInt(str string) (int, error) {
-	target, err := configInstance.findTarget(str)
+func (configInstance *ConfigManager) GetInt(str string) (int, error) {
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return 0, err
 	}
@@ -256,7 +262,7 @@ func (configInstance *ConfigClass) GetInt(str string) (int, error) {
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetInt64Default(str string, default_ int64) int64 {
+func (configInstance *ConfigManager) MustGetInt64Default(str string, default_ int64) int64 {
 	result, err := configInstance.GetInt64Default(str, default_)
 	if err != nil {
 		panic(err)
@@ -264,7 +270,7 @@ func (configInstance *ConfigClass) MustGetInt64Default(str string, default_ int6
 	return result
 }
 
-func (configInstance *ConfigClass) GetInt64Default(str string, default_ int64) (int64, error) {
+func (configInstance *ConfigManager) GetInt64Default(str string, default_ int64) (int64, error) {
 	result, err := configInstance.GetInt64(str)
 	if err != nil {
 		if _, ok := err.(*NotExistError); ok {
@@ -276,7 +282,7 @@ func (configInstance *ConfigClass) GetInt64Default(str string, default_ int64) (
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetInt64(str string) int64 {
+func (configInstance *ConfigManager) MustGetInt64(str string) int64 {
 	result, err := configInstance.GetInt64(str)
 	if err != nil {
 		panic(err)
@@ -284,8 +290,8 @@ func (configInstance *ConfigClass) MustGetInt64(str string) int64 {
 	return result
 }
 
-func (configInstance *ConfigClass) GetInt64(str string) (int64, error) {
-	target, err := configInstance.findTarget(str)
+func (configInstance *ConfigManager) GetInt64(str string) (int64, error) {
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return 0, err
 	}
@@ -296,7 +302,7 @@ func (configInstance *ConfigClass) GetInt64(str string) (int64, error) {
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetUint64Default(str string, default_ uint64) uint64 {
+func (configInstance *ConfigManager) MustGetUint64Default(str string, default_ uint64) uint64 {
 	result, err := configInstance.GetUint64Default(str, default_)
 	if err != nil {
 		panic(err)
@@ -304,7 +310,7 @@ func (configInstance *ConfigClass) MustGetUint64Default(str string, default_ uin
 	return result
 }
 
-func (configInstance *ConfigClass) GetUint64Default(str string, default_ uint64) (uint64, error) {
+func (configInstance *ConfigManager) GetUint64Default(str string, default_ uint64) (uint64, error) {
 	result, err := configInstance.GetUint64(str)
 	if err != nil {
 		if _, ok := err.(*NotExistError); ok {
@@ -316,8 +322,8 @@ func (configInstance *ConfigClass) GetUint64Default(str string, default_ uint64)
 	return result, nil
 }
 
-func (configInstance *ConfigClass) GetUint64(str string) (uint64, error) {
-	target, err := configInstance.findTarget(str)
+func (configInstance *ConfigManager) GetUint64(str string) (uint64, error) {
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return 0, err
 	}
@@ -328,7 +334,7 @@ func (configInstance *ConfigClass) GetUint64(str string) (uint64, error) {
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetBoolDefault(str string, default_ bool) bool {
+func (configInstance *ConfigManager) MustGetBoolDefault(str string, default_ bool) bool {
 	result, err := configInstance.GetBoolDefault(str, default_)
 	if err != nil {
 		panic(err)
@@ -336,7 +342,7 @@ func (configInstance *ConfigClass) MustGetBoolDefault(str string, default_ bool)
 	return result
 }
 
-func (configInstance *ConfigClass) GetBoolDefault(str string, default_ bool) (bool, error) {
+func (configInstance *ConfigManager) GetBoolDefault(str string, default_ bool) (bool, error) {
 	result, err := configInstance.GetBool(str)
 	if err != nil {
 		if _, ok := err.(*NotExistError); ok {
@@ -348,8 +354,8 @@ func (configInstance *ConfigClass) GetBoolDefault(str string, default_ bool) (bo
 	return result, nil
 }
 
-func (configInstance *ConfigClass) GetBool(str string) (bool, error) {
-	target, err := configInstance.findTarget(str)
+func (configInstance *ConfigManager) GetBool(str string) (bool, error) {
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return false, err
 	}
@@ -360,7 +366,7 @@ func (configInstance *ConfigClass) GetBool(str string) (bool, error) {
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetFloat64Default(str string, default_ float64) float64 {
+func (configInstance *ConfigManager) MustGetFloat64Default(str string, default_ float64) float64 {
 	result, err := configInstance.GetFloat64Default(str, default_)
 	if err != nil {
 		panic(err)
@@ -368,7 +374,7 @@ func (configInstance *ConfigClass) MustGetFloat64Default(str string, default_ fl
 	return result
 }
 
-func (configInstance *ConfigClass) GetFloat64Default(str string, default_ float64) (float64, error) {
+func (configInstance *ConfigManager) GetFloat64Default(str string, default_ float64) (float64, error) {
 	result, err := configInstance.GetFloat64(str)
 	if err != nil {
 		if _, ok := err.(*NotExistError); ok {
@@ -380,8 +386,8 @@ func (configInstance *ConfigClass) GetFloat64Default(str string, default_ float6
 	return result, nil
 }
 
-func (configInstance *ConfigClass) GetFloat64(str string) (float64, error) {
-	target, err := configInstance.findTarget(str)
+func (configInstance *ConfigManager) GetFloat64(str string) (float64, error) {
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return 0, err
 	}
@@ -392,31 +398,27 @@ func (configInstance *ConfigClass) GetFloat64(str string) (float64, error) {
 	return result, nil
 }
 
-func (configInstance *ConfigClass) Get(str string) (interface{}, error) {
-	return configInstance.findTarget(str)
-}
-
-func (configInstance *ConfigClass) Configs() map[string]interface{} {
+func (configInstance *ConfigManager) Configs() map[string]interface{} {
 	return configInstance.configs
 }
 
-func (configInstance *ConfigClass) FlagSetDefaultConfigs() map[string]interface{} {
+func (configInstance *ConfigManager) FlagSetDefaultConfigs() map[string]interface{} {
 	return configInstance.flagSetDefaultConfigs
 }
 
-func (configInstance *ConfigClass) FileConfigs() map[string]interface{} {
+func (configInstance *ConfigManager) FileConfigs() map[string]interface{} {
 	return configInstance.fileConfigs
 }
 
-func (configInstance *ConfigClass) EnvConfigs() map[string]interface{} {
+func (configInstance *ConfigManager) EnvConfigs() map[string]interface{} {
 	return configInstance.envConfigs
 }
 
-func (configInstance *ConfigClass) FlagSetConfigs() map[string]interface{} {
+func (configInstance *ConfigManager) FlagSetConfigs() map[string]interface{} {
 	return configInstance.flagSetConfigs
 }
 
-func (configInstance *ConfigClass) MustGetMapDefault(str string, default_ map[string]interface{}) map[string]interface{} {
+func (configInstance *ConfigManager) MustGetMapDefault(str string, default_ map[string]interface{}) map[string]interface{} {
 	map_, err := configInstance.GetMapDefault(str, default_)
 	if err != nil {
 		panic(err)
@@ -424,7 +426,7 @@ func (configInstance *ConfigClass) MustGetMapDefault(str string, default_ map[st
 	return map_
 }
 
-func (configInstance *ConfigClass) MustGetMap(str string) map[string]interface{} {
+func (configInstance *ConfigManager) MustGetMap(str string) map[string]interface{} {
 	map_, err := configInstance.GetMap(str)
 	if err != nil {
 		panic(err)
@@ -432,7 +434,7 @@ func (configInstance *ConfigClass) MustGetMap(str string) map[string]interface{}
 	return map_
 }
 
-func (configInstance *ConfigClass) GetMapDefault(str string, default_ map[string]interface{}) (map[string]interface{}, error) {
+func (configInstance *ConfigManager) GetMapDefault(str string, default_ map[string]interface{}) (map[string]interface{}, error) {
 	result, err := configInstance.GetMap(str)
 	if err != nil {
 		if _, ok := err.(*NotExistError); ok {
@@ -444,8 +446,8 @@ func (configInstance *ConfigClass) GetMapDefault(str string, default_ map[string
 	return result, nil
 }
 
-func (configInstance *ConfigClass) GetMap(str string) (map[string]interface{}, error) {
-	target, err := configInstance.findTarget(str)
+func (configInstance *ConfigManager) GetMap(str string) (map[string]interface{}, error) {
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return nil, err
 	}
@@ -462,14 +464,14 @@ func (configInstance *ConfigClass) GetMap(str string) (map[string]interface{}, e
 	return result, nil
 }
 
-func (configInstance *ConfigClass) MustGetStruct(str string, s interface{}) {
-	err := configInstance.GetStruct(str, s)
+func (configInstance *ConfigManager) MustGet(str string, s interface{}) {
+	err := configInstance.Get(str, s)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (configInstance *ConfigClass) GetStruct(str string, s interface{}) error {
+func (configInstance *ConfigManager) Get(str string, s interface{}) error {
 	config := &mapstructure.DecoderConfig{
 		WeaklyTypedInput: true,
 		TagName:          "json",
@@ -481,45 +483,14 @@ func (configInstance *ConfigClass) GetStruct(str string, s interface{}) error {
 		return err
 	}
 
-	map_, err := configInstance.GetMap(str)
+	target, err := configInstance.FindTarget(str)
 	if err != nil {
 		return err
 	}
-	err = decoder.Decode(map_)
+	//fmt.Println(target)
+	err = decoder.Decode(target)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func (configInstance *ConfigClass) MustGetSliceDefault(str string, default_ []interface{}) []interface{} {
-	result, err := configInstance.GetSliceDefault(str, default_)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (configInstance *ConfigClass) GetSliceDefault(str string, default_ []interface{}) ([]interface{}, error) {
-	result, err := configInstance.GetSlice(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return nil, err
-		}
-	}
-	return result, nil
-}
-
-func (configInstance *ConfigClass) GetSlice(str string) ([]interface{}, error) {
-	target, err := configInstance.findTarget(str)
-	if err != nil {
-		return nil, err
-	}
-	result, ok := target.([]interface{})
-	if !ok {
-		return nil, errors.New(`cast error`)
-	}
-	return result, nil
 }

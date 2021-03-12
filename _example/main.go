@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	go_config.Config.MustLoadConfig(go_config.Configuration{
+	go_config.ConfigManagerInstance.MustLoadConfig(go_config.Configuration{
 		SecretFilepath: "./_example/test.yaml",
 	})
 	var flagSet flag.FlagSet
@@ -18,13 +18,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go_config.Config.MergeFlagSet(&flagSet)
-	go_config.Config.MergeEnvs(map[string]string{
+	go_config.ConfigManagerInstance.MergeFlagSet(&flagSet)
+	go_config.ConfigManagerInstance.MergeEnvs(map[string]string{
 		"ABCD": "abcd",
 		"ABCDE": "abcde",
 	})
-	fmt.Println(go_config.Config.MustGetString("abcd"))
-	fmt.Println(go_config.Config.MustGetString("abcde"))
+	fmt.Println(go_config.ConfigManagerInstance.MustGetString("abcd"))
+	fmt.Println(go_config.ConfigManagerInstance.MustGetString("abcde"))
 }
 
 // go run ./_example/
