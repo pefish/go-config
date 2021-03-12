@@ -21,6 +21,10 @@ func TestConfigClass_LoadConfig(t *testing.T) {
 	b := make([]uint64, 0)
 	ConfigManagerInstance.MustGet(`/test3/test2/test8`, &b)
 	test.Equal(t, 3, len(b))
+
+	c := make([]string, 0)
+	ConfigManagerInstance.MustGet(`test4`, &c)
+	test.Equal(t, 2, len(c))
 }
 
 func TestConfigClass_LoadYamlConfig1(t *testing.T) {

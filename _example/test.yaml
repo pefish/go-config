@@ -17,3 +17,6 @@ test3:
       - 3
 name: _example
 abcd: 123
+test4:
+  - "123"
+  - 123
