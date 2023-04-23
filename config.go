@@ -7,17 +7,16 @@ import (
 	"github.com/pefish/go-reflect"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
 	"strings"
 )
 
 type ConfigManager struct {
-	flagSetConfigs map[string]interface{}
+	flagSetConfigs        map[string]interface{}
 	flagSetDefaultConfigs map[string]interface{}
-	envConfigs     map[string]interface{}
-	fileConfigs     map[string]interface{}
-	configs        map[string]interface{}
+	envConfigs            map[string]interface{}
+	fileConfigs           map[string]interface{}
+	configs               map[string]interface{}
 }
 
 var ConfigManagerInstance = NewConfigManager()
@@ -29,11 +28,11 @@ type Configuration struct {
 
 func NewConfigManager() *ConfigManager {
 	return &ConfigManager{
-		configs:        make(map[string]interface{}, 5),
-		fileConfigs:        make(map[string]interface{}, 5),
-		flagSetConfigs: make(map[string]interface{}, 2),
+		configs:               make(map[string]interface{}, 5),
+		fileConfigs:           make(map[string]interface{}, 5),
+		flagSetConfigs:        make(map[string]interface{}, 2),
 		flagSetDefaultConfigs: make(map[string]interface{}, 2),
-		envConfigs:     make(map[string]interface{}, 2),
+		envConfigs:            make(map[string]interface{}, 2),
 	}
 }
 
@@ -44,13 +43,32 @@ func (configInstance *ConfigManager) MustLoadConfig(config Configuration) {
 	}
 }
 
+func (configInstance *ConfigManager) Unmarshal(out interface{}) error {
+	config := &mapstructure.DecoderConfig{
+		WeaklyTypedInput: true,
+		TagName:          "json",
+		Result:           &out,
+	}
+
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return err
+	}
+
+	err = decoder.Decode(configInstance.configs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (configInstance *ConfigManager) LoadConfig(config Configuration) error {
 	configMap := make(map[string]interface{})
 	if config.ConfigFilepath != `` {
 		if !strings.HasSuffix(config.ConfigFilepath, "yaml") {
 			return errors.New("only support yaml file")
 		}
-		bytes, err := ioutil.ReadFile(config.ConfigFilepath)
+		bytes, err := os.ReadFile(config.ConfigFilepath)
 		if err == nil {
 			err = yaml.Unmarshal(bytes, &configMap)
 			if err != nil {
@@ -64,7 +82,7 @@ func (configInstance *ConfigManager) LoadConfig(config Configuration) error {
 		if !strings.HasSuffix(config.SecretFilepath, "yaml") {
 			return errors.New("only support yaml file")
 		}
-		bytes, err := ioutil.ReadFile(config.SecretFilepath)
+		bytes, err := os.ReadFile(config.SecretFilepath)
 		if err == nil {
 			err = yaml.Unmarshal(bytes, &secretMap)
 			if err != nil {
