@@ -1,9 +1,7 @@
-github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQzvN1EDeE=
-github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
-github.com/pefish/go-error v1.0.3 h1:cvr0XsXpE7AaRVeSyC7WnLOLiR552a+Tp8fC48yhYFA=
-github.com/pefish/go-error v1.0.3/go.mod h1:OLnjLGHgKqEZSsSwKdx6QDBH9o9mqVCMTBroRuUZQDc=
-github.com/pefish/go-reflect v0.2.1 h1:RJs94iRBhGAUXKznI5042FhsSgF3ytHy/qeDLAV+xuM=
-github.com/pefish/go-reflect v0.2.1/go.mod h1:J1PmxXVMl+IqyzuL1OndaKqZjkvfKLaZA9LpUCUB99c=
+github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
+github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
+github.com/pefish/go-reflect v0.2.2 h1:rNYU5mMIouRaZyAjDt2/rooNm0zx2IaRBa344Bq1s9o=
+github.com/pefish/go-reflect v0.2.2/go.mod h1:J1PmxXVMl+IqyzuL1OndaKqZjkvfKLaZA9LpUCUB99c=
 github.com/pefish/go-test-assert v0.0.1 h1:zWV2Hnn/Rtjf+bEOlyB8qF9ThJb7gmXpRPWEqJtjzjg=
 github.com/pefish/go-test-assert v0.0.1/go.mod h1:kfcsv5ag411u06gdV4iRKU8D0zOglian/DBacnCoQdc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
