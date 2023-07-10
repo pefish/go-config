@@ -360,6 +360,14 @@ func (configInstance *ConfigManager) MustGetBoolDefault(str string, default_ boo
 	return result
 }
 
+func (configInstance *ConfigManager) MustGetBool(str string) bool {
+	result, err := configInstance.GetBool(str)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 func (configInstance *ConfigManager) GetBoolDefault(str string, default_ bool) (bool, error) {
 	result, err := configInstance.GetBool(str)
 	if err != nil {
