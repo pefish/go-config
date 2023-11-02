@@ -2,8 +2,8 @@ package go_config
 
 import (
 	"flag"
-	go_reflect "github.com/pefish/go-reflect"
-	"github.com/pefish/go-test-assert"
+	go_format "github.com/pefish/go-format"
+	go_test_ "github.com/pefish/go-test"
 	"strings"
 	"testing"
 )
@@ -16,15 +16,15 @@ func TestConfigClass_LoadConfig(t *testing.T) {
 		Haha string `json:"haha"`
 	}{}
 	ConfigManagerInstance.MustGet(`test`, &a)
-	test.Equal(t, `a2`, a.Haha)
+	go_test_.Equal(t, `a2`, a.Haha)
 
 	b := make([]uint64, 0)
 	ConfigManagerInstance.MustGet(`/test3/test2/test8`, &b)
-	test.Equal(t, 3, len(b))
+	go_test_.Equal(t, 3, len(b))
 
 	c := make([]string, 0)
 	ConfigManagerInstance.MustGet(`test4`, &c)
-	test.Equal(t, 2, len(c))
+	go_test_.Equal(t, 2, len(c))
 }
 
 func TestConfigClass_LoadYamlConfig1(t *testing.T) {
@@ -39,8 +39,8 @@ func TestConfigClass_LoadYamlConfig1(t *testing.T) {
 		Haha string `json:"haha"`
 	}{}
 	err = instance.Get(`test`, &a)
-	test.Equal(t, false, err == nil)
-	test.Equal(t, true, strings.Contains(err.Error(), "not exist"))
+	go_test_.Equal(t, false, err == nil)
+	go_test_.Equal(t, true, strings.Contains(err.Error(), "not exist"))
 }
 
 func TestConfigClass_LoadYamlConfig3(t *testing.T) {
@@ -56,16 +56,16 @@ func TestConfigClass_LoadYamlConfig3(t *testing.T) {
 	})
 	configManagerInstance.MergeFlagSet(flagSet)
 	result, err := configManagerInstance.GetBool("abc")
-	test.Equal(t, nil, err)
-	test.Equal(t, true, result)
+	go_test_.Equal(t, nil, err)
+	go_test_.Equal(t, true, result)
 
 	result1, err1 := configManagerInstance.GetString("name")
-	test.Equal(t, nil, err1)
-	test.Equal(t, "_example", result1)
+	go_test_.Equal(t, nil, err1)
+	go_test_.Equal(t, "_example", result1)
 
 	result2, ok := configManagerInstance.FlagSetDefaultConfigs()["abc"]
-	test.Equal(t, true, ok)
-	test.Equal(t, true, go_reflect.Reflect.MustToBool(result2))
+	go_test_.Equal(t, true, ok)
+	go_test_.Equal(t, true, go_format.FormatInstance.MustToBool(result2))
 }
 
 func TestConfigClass_GetString2(t *testing.T) {
@@ -154,7 +154,7 @@ func TestConfigClass_GetMap(t *testing.T) {
 		ConfigFilepath: `./_example/test.yaml`,
 	})
 	map_ := ConfigManagerInstance.MustGetMapDefault(`/test3/test2`, nil)
-	test.Equal(t, 45, go_reflect.Reflect.MustToInt(map_[`test3`]))
+	go_test_.Equal(t, 45, go_format.FormatInstance.MustToInt(map_[`test3`]))
 
 	map1_ := ConfigManagerInstance.MustGetMapDefault(`/test3/test225235`, map[string]interface{}{
 		"haha111": "36573",
