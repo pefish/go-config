@@ -55,11 +55,11 @@ func TestConfigClass_LoadYamlConfig3(t *testing.T) {
 		SecretFilepath: `./_example/test.yaml`,
 	})
 	configManagerInstance.MergeFlagSet(flagSet)
-	result, err := configManagerInstance.GetBool("abc")
+	result, err := configManagerInstance.Bool("abc")
 	go_test_.Equal(t, nil, err)
 	go_test_.Equal(t, true, result)
 
-	result1, err1 := configManagerInstance.GetString("name")
+	result1, err1 := configManagerInstance.String("name")
 	go_test_.Equal(t, nil, err1)
 	go_test_.Equal(t, "_example", result1)
 
@@ -72,28 +72,28 @@ func TestConfigClass_GetString2(t *testing.T) {
 	ConfigManagerInstance.MustLoadConfig(Configuration{
 		ConfigFilepath: `./_example/test.yaml`,
 	})
-	str := ConfigManagerInstance.MustGetString(`/test1/test2/test3`)
+	str := ConfigManagerInstance.MustString(`/test1/test2/test3`)
 	if str != `45` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test/haha`)
+	str = ConfigManagerInstance.MustString(`/test/haha`)
 	//fmt.Println(str1, `  cache`)
 	if str != `a2` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test2`)
+	str = ConfigManagerInstance.MustString(`/test2`)
 	if str != `b` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test3/test2/test4/test5/test6`)
+	str = ConfigManagerInstance.MustString(`/test3/test2/test4/test5/test6`)
 	if str != `122` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test3/test2/test4/test5/test7`)
+	str = ConfigManagerInstance.MustString(`/test3/test2/test4/test5/test7`)
 	if str != `11` {
 		t.Error()
 	}
@@ -103,27 +103,27 @@ func TestConfigClass_GetString3(t *testing.T) {
 	ConfigManagerInstance.MustLoadConfig(Configuration{
 		ConfigFilepath: `./_example/test.yaml`,
 	})
-	str := ConfigManagerInstance.MustGetString(`/test1/test2/test3`)
+	str := ConfigManagerInstance.MustString(`/test1/test2/test3`)
 	if str != `45` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test/haha`)
+	str = ConfigManagerInstance.MustString(`/test/haha`)
 	if str != `a2` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test2`)
+	str = ConfigManagerInstance.MustString(`/test2`)
 	if str != `b` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test3/test2/test4/test5/test6`)
+	str = ConfigManagerInstance.MustString(`/test3/test2/test4/test5/test6`)
 	if str != `122` {
 		t.Error()
 	}
 
-	str = ConfigManagerInstance.MustGetString(`/test3/test2/test4/test5/test7`)
+	str = ConfigManagerInstance.MustString(`/test3/test2/test4/test5/test7`)
 	if str != `11` {
 		t.Error()
 	}
@@ -133,7 +133,7 @@ func TestConfigClass_GetInt2(t *testing.T) {
 	ConfigManagerInstance.MustLoadConfig(Configuration{
 		ConfigFilepath: `./_example/test.yaml`,
 	})
-	int_ := ConfigManagerInstance.MustGetInt(`/test1/test2/test3`)
+	int_ := ConfigManagerInstance.MustInt(`/test1/test2/test3`)
 	if int_ != 45 {
 		t.Error()
 	}
@@ -143,7 +143,7 @@ func TestConfigClass_GetInt642(t *testing.T) {
 	ConfigManagerInstance.MustLoadConfig(Configuration{
 		ConfigFilepath: `./_example/test.yaml`,
 	})
-	int_ := ConfigManagerInstance.MustGetInt64(`/test1/test2/test3`)
+	int_ := ConfigManagerInstance.MustInt64(`/test1/test2/test3`)
 	if int_ != 45 {
 		t.Error()
 	}
@@ -153,25 +153,19 @@ func TestConfigClass_GetMap(t *testing.T) {
 	ConfigManagerInstance.MustLoadConfig(Configuration{
 		ConfigFilepath: `./_example/test.yaml`,
 	})
-	map_ := ConfigManagerInstance.MustGetMapDefault(`/test3/test2`, nil)
+	map_ := ConfigManagerInstance.MustMap(`/test3/test2`)
 	go_test_.Equal(t, 45, go_format.FormatInstance.MustToInt(map_[`test3`]))
 
-	map1_ := ConfigManagerInstance.MustGetMapDefault(`/test3/test225235`, map[string]interface{}{
-		"haha111": "36573",
-	})
-	if map1_[`haha111`].(string) != "36573" {
-		t.Error()
-	}
+	map1_ := ConfigManagerInstance.MustMap(`/test3/test225235`)
+	go_test_.Equal(t, map[string]interface{}(nil), map1_)
 }
 
 func TestConfigClass_GetBool(t *testing.T) {
 	ConfigManagerInstance.MustLoadConfig(Configuration{
 		ConfigFilepath: `./_example/test.yaml`,
 	})
-	_, err := ConfigManagerInstance.GetBool(`xixi`)
-	if _, ok := err.(*NotExistError); !ok {
-		t.Error()
-	}
+	r := ConfigManagerInstance.MustBool(`xixi`)
+	go_test_.Equal(t, false, r)
 }
 
 func TestConfigClass_GetString(t *testing.T) {
@@ -205,7 +199,7 @@ func TestConfigClass_GetString(t *testing.T) {
 			this := &ConfigManager{
 				configs: tt.fields.configs,
 			}
-			if got := this.MustGetString(tt.args.str); got != tt.want {
+			if got := this.MustString(tt.args.str); got != tt.want {
 				t.Errorf("ConfigManager.GetString() = %v, want %v", got, tt.want)
 			}
 		})
@@ -216,8 +210,6 @@ func TestConfigClass_MustGetStringDefault(t *testing.T) {
 	ConfigManagerInstance.MustLoadConfig(Configuration{
 		ConfigFilepath: `./_example/test.yaml`,
 	})
-	str := ConfigManagerInstance.MustGetStringDefault(`/test1/test2/test4577`, `123`)
-	if str != `123` {
-		t.Error()
-	}
+	str := ConfigManagerInstance.MustString(`/test1/test2/test4577`)
+	go_test_.Equal(t, "", str)
 }

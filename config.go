@@ -178,26 +178,6 @@ func (c *ConfigManager) combineConfigs() {
 	//fmt.Println(c.flagSetConfigs)
 }
 
-func (c *ConfigManager) MustGetStringDefault(str string, default_ string) string {
-	result, err := c.GetStringDefault(str, default_)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (c *ConfigManager) GetStringDefault(str string, default_ string) (string, error) {
-	result, err := c.GetString(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return ``, err
-		}
-	}
-	return result, nil
-}
-
 func (c *ConfigManager) FindTarget(str string) (interface{}, error) {
 	target := c.configs[str]
 	//fmt.Println(target)
@@ -223,54 +203,42 @@ func (c *ConfigManager) FindTarget(str string) (interface{}, error) {
 	return target, nil
 }
 
-func (c *ConfigManager) MustGetString(str string) string {
-	result, err := c.GetString(str)
+func (c *ConfigManager) MustString(str string) string {
+	result, err := c.String(str)
 	if err != nil {
 		panic(err)
 	}
 	return result
 }
 
-func (c *ConfigManager) GetString(str string) (string, error) {
+func (c *ConfigManager) String(str string) (string, error) {
 	target, err := c.FindTarget(str)
 	if err != nil {
-		return ``, err
+		var notExistError *NotExistError
+		if errors.As(err, &notExistError) {
+			return "", nil
+		}
+		return "", err
 	}
 	result := go_format.FormatInstance.ToString(target)
 	return result, nil
 }
 
-func (c *ConfigManager) MustGetIntDefault(str string, default_ int) int {
-	result, err := c.GetIntDefault(str, default_)
+func (c *ConfigManager) MustInt(str string) int {
+	result, err := c.Int(str)
 	if err != nil {
 		panic(err)
 	}
 	return result
 }
 
-func (c *ConfigManager) GetIntDefault(str string, default_ int) (int, error) {
-	result, err := c.GetInt(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return 0, err
-		}
-	}
-	return result, nil
-}
-
-func (c *ConfigManager) MustGetInt(str string) int {
-	result, err := c.GetInt(str)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (c *ConfigManager) GetInt(str string) (int, error) {
+func (c *ConfigManager) Int(str string) (int, error) {
 	target, err := c.FindTarget(str)
 	if err != nil {
+		var notExistError *NotExistError
+		if errors.As(err, &notExistError) {
+			return 0, nil
+		}
 		return 0, err
 	}
 	result, err := go_format.FormatInstance.ToInt(target)
@@ -280,37 +248,21 @@ func (c *ConfigManager) GetInt(str string) (int, error) {
 	return result, nil
 }
 
-func (c *ConfigManager) MustGetInt64Default(str string, default_ int64) int64 {
-	result, err := c.GetInt64Default(str, default_)
+func (c *ConfigManager) MustInt64(str string) int64 {
+	result, err := c.Int64(str)
 	if err != nil {
 		panic(err)
 	}
 	return result
 }
 
-func (c *ConfigManager) GetInt64Default(str string, default_ int64) (int64, error) {
-	result, err := c.GetInt64(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return 0, err
-		}
-	}
-	return result, nil
-}
-
-func (c *ConfigManager) MustGetInt64(str string) int64 {
-	result, err := c.GetInt64(str)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (c *ConfigManager) GetInt64(str string) (int64, error) {
+func (c *ConfigManager) Int64(str string) (int64, error) {
 	target, err := c.FindTarget(str)
 	if err != nil {
+		var notExistError *NotExistError
+		if errors.As(err, &notExistError) {
+			return 0, nil
+		}
 		return 0, err
 	}
 	result, err := go_format.FormatInstance.ToInt64(target)
@@ -320,37 +272,21 @@ func (c *ConfigManager) GetInt64(str string) (int64, error) {
 	return result, nil
 }
 
-func (c *ConfigManager) MustGetUint64Default(str string, default_ uint64) uint64 {
-	result, err := c.GetUint64Default(str, default_)
+func (c *ConfigManager) MustUint64(str string) uint64 {
+	result, err := c.Uint64(str)
 	if err != nil {
 		panic(err)
 	}
 	return result
 }
 
-func (c *ConfigManager) GetUint64Default(str string, default_ uint64) (uint64, error) {
-	result, err := c.GetUint64(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return 0, err
-		}
-	}
-	return result, nil
-}
-
-func (c *ConfigManager) MustGetUint64(str string) uint64 {
-	result, err := c.GetUint64(str)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (c *ConfigManager) GetUint64(str string) (uint64, error) {
+func (c *ConfigManager) Uint64(str string) (uint64, error) {
 	target, err := c.FindTarget(str)
 	if err != nil {
+		var notExistError *NotExistError
+		if errors.As(err, &notExistError) {
+			return 0, nil
+		}
 		return 0, err
 	}
 	result, err := go_format.FormatInstance.ToUint64(target)
@@ -360,37 +296,21 @@ func (c *ConfigManager) GetUint64(str string) (uint64, error) {
 	return result, nil
 }
 
-func (c *ConfigManager) MustGetBoolDefault(str string, default_ bool) bool {
-	result, err := c.GetBoolDefault(str, default_)
+func (c *ConfigManager) MustBool(str string) bool {
+	result, err := c.Bool(str)
 	if err != nil {
 		panic(err)
 	}
 	return result
 }
 
-func (c *ConfigManager) MustGetBool(str string) bool {
-	result, err := c.GetBool(str)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (c *ConfigManager) GetBoolDefault(str string, default_ bool) (bool, error) {
-	result, err := c.GetBool(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return false, err
-		}
-	}
-	return result, nil
-}
-
-func (c *ConfigManager) GetBool(str string) (bool, error) {
+func (c *ConfigManager) Bool(str string) (bool, error) {
 	target, err := c.FindTarget(str)
 	if err != nil {
+		var notExistError *NotExistError
+		if errors.As(err, &notExistError) {
+			return false, nil
+		}
 		return false, err
 	}
 	result, err := go_format.FormatInstance.ToBool(target)
@@ -400,29 +320,13 @@ func (c *ConfigManager) GetBool(str string) (bool, error) {
 	return result, nil
 }
 
-func (c *ConfigManager) MustGetFloat64Default(str string, default_ float64) float64 {
-	result, err := c.GetFloat64Default(str, default_)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (c *ConfigManager) GetFloat64Default(str string, default_ float64) (float64, error) {
-	result, err := c.GetFloat64(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return 0, err
-		}
-	}
-	return result, nil
-}
-
-func (c *ConfigManager) GetFloat64(str string) (float64, error) {
+func (c *ConfigManager) Float64(str string) (float64, error) {
 	target, err := c.FindTarget(str)
 	if err != nil {
+		var notExistError *NotExistError
+		if errors.As(err, &notExistError) {
+			return 0.0, nil
+		}
 		return 0, err
 	}
 	result, err := go_format.FormatInstance.ToFloat64(target)
@@ -452,37 +356,21 @@ func (c *ConfigManager) FlagSetConfigs() map[string]interface{} {
 	return c.flagSetConfigs
 }
 
-func (c *ConfigManager) MustGetMapDefault(str string, default_ map[string]interface{}) map[string]interface{} {
-	map_, err := c.GetMapDefault(str, default_)
+func (c *ConfigManager) MustMap(str string) map[string]interface{} {
+	map_, err := c.Map(str)
 	if err != nil {
 		panic(err)
 	}
 	return map_
 }
 
-func (c *ConfigManager) MustGetMap(str string) map[string]interface{} {
-	map_, err := c.GetMap(str)
-	if err != nil {
-		panic(err)
-	}
-	return map_
-}
-
-func (c *ConfigManager) GetMapDefault(str string, default_ map[string]interface{}) (map[string]interface{}, error) {
-	result, err := c.GetMap(str)
-	if err != nil {
-		if _, ok := err.(*NotExistError); ok {
-			return default_, nil
-		} else {
-			return nil, err
-		}
-	}
-	return result, nil
-}
-
-func (c *ConfigManager) GetMap(str string) (map[string]interface{}, error) {
+func (c *ConfigManager) Map(str string) (map[string]interface{}, error) {
 	target, err := c.FindTarget(str)
 	if err != nil {
+		var notExistError *NotExistError
+		if errors.As(err, &notExistError) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
