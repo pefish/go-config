@@ -111,8 +111,9 @@ func (c *ConfigManager) MergeFlagSet(flagSet *flag.FlagSet) {
 	c.combineConfigs()
 }
 
-// merge envs
-func (c *ConfigManager) MergeEnvs() {
+// priority: flag > envs > config file > flag default value
+func (c *ConfigManager) combineConfigs() {
+	// 查找环境变量中有没有匹配的配置项
 	for k := range c.Configs() {
 		envValue := os.Getenv(strings.ReplaceAll(strings.ToUpper(k), "-", "_"))
 		if envValue != "" {
@@ -120,11 +121,6 @@ func (c *ConfigManager) MergeEnvs() {
 		}
 	}
 
-	c.combineConfigs()
-}
-
-// priority: flag > envs > config file > flag default value
-func (c *ConfigManager) combineConfigs() {
 	for key, value := range c.flagSetDefaultConfigs {
 		c.configs[key] = value
 	}
