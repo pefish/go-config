@@ -3,12 +3,13 @@ package go_config
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/mitchellh/mapstructure"
 	go_format "github.com/pefish/go-format"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-	"os"
-	"strings"
 )
 
 type ConfigManager struct {
@@ -21,11 +22,6 @@ type ConfigManager struct {
 
 var ConfigManagerInstance = NewConfigManager()
 
-type Configuration struct {
-	ConfigFilepath string
-	SecretFilepath string
-}
-
 func NewConfigManager() *ConfigManager {
 	return &ConfigManager{
 		configs:               make(map[string]interface{}, 5),
@@ -33,13 +29,6 @@ func NewConfigManager() *ConfigManager {
 		flagSetConfigs:        make(map[string]interface{}, 2),
 		flagSetDefaultConfigs: make(map[string]interface{}, 2),
 		envConfigs:            make(map[string]interface{}, 2),
-	}
-}
-
-func (c *ConfigManager) MustLoadConfig(config Configuration) {
-	err := c.LoadConfig(config)
-	if err != nil {
-		panic(err)
 	}
 }
 
@@ -62,39 +51,21 @@ func (c *ConfigManager) Unmarshal(out interface{}) error {
 	return nil
 }
 
-func (c *ConfigManager) LoadConfig(config Configuration) error {
+// merge config file
+func (c *ConfigManager) MergeConfigFile(configFilepath string) error {
 	configMap := make(map[string]interface{})
-	if config.ConfigFilepath != `` {
-		if !strings.HasSuffix(config.ConfigFilepath, "yaml") {
-			return errors.New("only support yaml file")
-		}
-		bytes, err := os.ReadFile(config.ConfigFilepath)
-		if err == nil {
-			err = yaml.Unmarshal(bytes, &configMap)
-			if err != nil {
-				return errors.WithMessage(err, "file format error")
-			}
-		}
+	if !strings.HasSuffix(configFilepath, "yaml") {
+		return errors.New("Only support yaml file.")
 	}
-
-	secretMap := make(map[string]interface{})
-	if config.SecretFilepath != `` {
-		if !strings.HasSuffix(config.SecretFilepath, "yaml") {
-			return errors.New("only support yaml file")
-		}
-		bytes, err := os.ReadFile(config.SecretFilepath)
-		if err == nil {
-			err = yaml.Unmarshal(bytes, &secretMap)
-			if err != nil {
-				return errors.WithMessage(err, "file format error")
-			}
+	bytes, err := os.ReadFile(configFilepath)
+	if err == nil {
+		err = yaml.Unmarshal(bytes, &configMap)
+		if err != nil {
+			return errors.WithMessage(err, "File format error.")
 		}
 	}
 
 	c.fileConfigs = configMap
-	for key, val := range secretMap {
-		c.fileConfigs[key] = val
-	}
 	c.combineConfigs()
 	return nil
 }
@@ -126,8 +97,6 @@ func (c *ConfigManager) parseYaml(arr []string, length int, path string) (map[in
 }
 
 // merge flag config
-// priority: flag > config file > flag default value
-// just cover
 func (c *ConfigManager) MergeFlagSet(flagSet *flag.FlagSet) {
 	flagSet.Visit(func(f *flag.Flag) {
 		c.flagSetConfigs[f.Name] = f.Value.String()
@@ -143,19 +112,18 @@ func (c *ConfigManager) MergeFlagSet(flagSet *flag.FlagSet) {
 }
 
 // merge envs
-// priority: flag > envs > config file > flag default value
 func (c *ConfigManager) MergeEnvs(envKeyPair map[string]string) {
-	for envName, keyName := range envKeyPair {
-		envValue := os.Getenv(envName)
+	for k := range c.Configs() {
+		envValue := os.Getenv(strings.ReplaceAll(strings.ToUpper(k), "-", "_"))
 		if envValue != "" {
-			c.envConfigs[keyName] = envValue
+			c.envConfigs[k] = envValue
 		}
 	}
 
 	c.combineConfigs()
-
 }
 
+// priority: flag > envs > config file > flag default value
 func (c *ConfigManager) combineConfigs() {
 	for key, value := range c.flagSetDefaultConfigs {
 		c.configs[key] = value
