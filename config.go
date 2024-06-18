@@ -112,7 +112,7 @@ func (c *ConfigManager) MergeFlagSet(flagSet *flag.FlagSet) {
 }
 
 // merge envs
-func (c *ConfigManager) MergeEnvs(envKeyPair map[string]string) {
+func (c *ConfigManager) MergeEnvs() {
 	for k := range c.Configs() {
 		envValue := os.Getenv(strings.ReplaceAll(strings.ToUpper(k), "-", "_"))
 		if envValue != "" {
