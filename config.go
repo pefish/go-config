@@ -35,6 +35,7 @@ func (c *ConfigManager) Unmarshal(out interface{}) error {
 		WeaklyTypedInput: true,
 		TagName:          "json",
 		Result:           &out,
+		Squash:           true,
 	}
 
 	decoder, err := mapstructure.NewDecoder(config)

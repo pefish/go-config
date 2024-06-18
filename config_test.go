@@ -91,11 +91,20 @@ func TestConfigManager_Unmarshal(t *testing.T) {
 	err := ConfigManagerInstance.MergeConfigFile(`./test.yaml`)
 	go_test_.Equal(t, nil, err)
 
+	type BasicType struct {
+		Test1 struct {
+			Test2 struct {
+				Test3 int `json:"test3"`
+			} `json:"test2"`
+		} `json:"test1"`
+	}
+
 	type Test struct {
 		Test struct {
 			Haha string `json:"haha"`
 		} `json:"test"`
 		Test4 []interface{} `json:"test4"`
+		BasicType
 	}
 
 	var test Test
@@ -104,4 +113,5 @@ func TestConfigManager_Unmarshal(t *testing.T) {
 	go_test_.Equal(t, "a2", test.Test.Haha)
 	go_test_.Equal(t, "123", test.Test4[0].(string))
 	go_test_.Equal(t, 123, test.Test4[1].(int))
+	go_test_.Equal(t, 45, test.Test1.Test2.Test3)
 }
