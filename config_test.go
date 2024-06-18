@@ -86,3 +86,22 @@ func TestConfigClass_MustGetStringDefault(t *testing.T) {
 	str := ConfigManagerInstance.MustString(`/test1/test2/test4577`)
 	go_test_.Equal(t, "", str)
 }
+
+func TestConfigManager_Unmarshal(t *testing.T) {
+	err := ConfigManagerInstance.MergeConfigFile(`./test.yaml`)
+	go_test_.Equal(t, nil, err)
+
+	type Test struct {
+		Test struct {
+			Haha string `json:"haha"`
+		} `json:"test"`
+		Test4 []interface{} `json:"test4"`
+	}
+
+	var test Test
+	err = ConfigManagerInstance.Unmarshal(&test)
+	go_test_.Equal(t, nil, err)
+	go_test_.Equal(t, "a2", test.Test.Haha)
+	go_test_.Equal(t, "123", test.Test4[0].(string))
+	go_test_.Equal(t, 123, test.Test4[1].(int))
+}
