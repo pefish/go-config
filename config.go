@@ -15,7 +15,6 @@ import (
 type ConfigManager struct {
 	flagSetConfigs        map[string]interface{}
 	flagSetDefaultConfigs map[string]interface{}
-	envConfigs            map[string]interface{}
 	fileConfigs           map[string]interface{}
 	configs               map[string]interface{}
 }
@@ -28,7 +27,6 @@ func NewConfigManager() *ConfigManager {
 		fileConfigs:           make(map[string]interface{}, 5),
 		flagSetConfigs:        make(map[string]interface{}, 2),
 		flagSetDefaultConfigs: make(map[string]interface{}, 2),
-		envConfigs:            make(map[string]interface{}, 2),
 	}
 }
 
@@ -111,16 +109,8 @@ func (c *ConfigManager) MergeFlagSet(flagSet *flag.FlagSet) {
 	c.combineConfigs()
 }
 
-// priority: flag > envs > config file > flag default value
+// priority: env > flag > config file > flag default value
 func (c *ConfigManager) combineConfigs() {
-	// 查找环境变量中有没有匹配的配置项
-	for k := range c.Configs() {
-		envValue := os.Getenv(strings.ReplaceAll(strings.ToUpper(k), "-", "_"))
-		if envValue != "" {
-			c.envConfigs[k] = envValue
-		}
-	}
-
 	for key, value := range c.flagSetDefaultConfigs {
 		c.configs[key] = value
 	}
@@ -131,15 +121,18 @@ func (c *ConfigManager) combineConfigs() {
 	}
 	//fmt.Println(c.flagSetDefaultConfigs)
 
-	for key, value := range c.envConfigs {
-		c.configs[key] = value
-	}
-	//fmt.Println(c.envConfigs)
-
 	for key, value := range c.flagSetConfigs {
 		c.configs[key] = value
 	}
 	//fmt.Println(c.flagSetConfigs)
+
+	// 查找环境变量中有没有匹配的配置项
+	for k := range c.Configs() {
+		envValue := os.Getenv(strings.ReplaceAll(strings.ToUpper(k), "-", "_"))
+		if envValue != "" {
+			c.configs[k] = envValue
+		}
+	}
 }
 
 func (c *ConfigManager) FindTarget(str string) (interface{}, error) {
@@ -310,10 +303,6 @@ func (c *ConfigManager) FlagSetDefaultConfigs() map[string]interface{} {
 
 func (c *ConfigManager) FileConfigs() map[string]interface{} {
 	return c.fileConfigs
-}
-
-func (c *ConfigManager) EnvConfigs() map[string]interface{} {
-	return c.envConfigs
 }
 
 func (c *ConfigManager) FlagSetConfigs() map[string]interface{} {
