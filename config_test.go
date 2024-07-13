@@ -115,3 +115,11 @@ func TestConfigManager_Unmarshal(t *testing.T) {
 	go_test_.Equal(t, 123, test.Test4[1].(int))
 	go_test_.Equal(t, 45, test.Test1.Test2.Test3)
 }
+
+func TestConfigManager_SetEnvFile(t *testing.T) {
+	err := ConfigManagerInstance.SetEnvFile(`./.env`)
+	go_test_.Equal(t, nil, err)
+	err = ConfigManagerInstance.MergeConfigFile(`./test.yaml`)
+	go_test_.Equal(t, nil, err)
+	go_test_.Equal(t, 123, ConfigManagerInstance.MustUint64("abcd"))
+}

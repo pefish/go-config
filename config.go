@@ -73,13 +73,12 @@ func (c *ConfigManager) MergeConfigFile(configFilepath string) error {
 	return nil
 }
 
-// merge config file
-func (c *ConfigManager) MergeEnvFile(envFilepath string) error {
-	if !go_file.FileInstance.Exists(c.envFilepath) {
+// set env file
+func (c *ConfigManager) SetEnvFile(envFilepath string) error {
+	if !go_file.FileInstance.Exists(envFilepath) {
 		return errors.Errorf("Env file <%s> not be found.", envFilepath)
 	}
 	c.envFilepath = envFilepath
-	c.combineConfigs()
 	return nil
 }
 
