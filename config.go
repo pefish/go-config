@@ -6,7 +6,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/mitchellh/mapstructure"
+	go_file "github.com/pefish/go-file"
 	go_format "github.com/pefish/go-format"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -17,6 +19,8 @@ type ConfigManager struct {
 	flagSetDefaultConfigs map[string]interface{}
 	fileConfigs           map[string]interface{}
 	configs               map[string]interface{}
+
+	envFilepath string
 }
 
 var ConfigManagerInstance = NewConfigManager()
@@ -69,6 +73,16 @@ func (c *ConfigManager) MergeConfigFile(configFilepath string) error {
 	return nil
 }
 
+// merge config file
+func (c *ConfigManager) MergeEnvFile(envFilepath string) error {
+	if !go_file.FileInstance.Exists(c.envFilepath) {
+		return errors.Errorf("Env file <%s> not be found.", envFilepath)
+	}
+	c.envFilepath = envFilepath
+	c.combineConfigs()
+	return nil
+}
+
 type NotExistError struct {
 	path string
 }
@@ -110,7 +124,7 @@ func (c *ConfigManager) MergeFlagSet(flagSet *flag.FlagSet) {
 	c.combineConfigs()
 }
 
-// priority: env > flag > config file > flag default value
+// priority: env > env file > flag > config file > flag default value
 func (c *ConfigManager) combineConfigs() {
 	for key, value := range c.flagSetDefaultConfigs {
 		c.configs[key] = value
@@ -126,6 +140,17 @@ func (c *ConfigManager) combineConfigs() {
 		c.configs[key] = value
 	}
 	//fmt.Println(c.flagSetConfigs)
+
+	// env file
+	if c.envFilepath != "" {
+		envMap, _ := godotenv.Read(c.envFilepath)
+		for k := range c.Configs() {
+			envValue, ok := envMap[strings.ReplaceAll(strings.ToUpper(k), "-", "_")]
+			if ok {
+				c.configs[k] = envValue
+			}
+		}
+	}
 
 	// 查找环境变量中有没有匹配的配置项
 	for k := range c.Configs() {

@@ -1,7 +1,11 @@
 github.com/fatih/structs v1.1.0 h1:Q7juDM0QtcnhCpeyLGQKyg4TOIghuNXrkL32pHAUMxo=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
+github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
+github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
+github.com/pefish/go-file v0.2.3 h1:glBhRD2Gn2YZB6Krw3I8rlkcDhf/BlSDA6PN8FIU0sc=
+github.com/pefish/go-file v0.2.3/go.mod h1:SsTQNSzKWUrpHJVZD1wyOjRAiXx4cIUgjSYMTHD1zxI=
 github.com/pefish/go-format v0.3.2 h1:0MihBkCV8WdY5GmHiaCAJnzbgv25mFmUcfnmumdSKrA=
 github.com/pefish/go-format v0.3.2/go.mod h1:rI2ykz+2t8VattiNtK1yxm0KwsBOJTyPOMwSFblW62A=
 github.com/pefish/go-test v0.0.4 h1:s1RmZWe91K1MtENJUcl7CjGUFK/TmleZ5h3OkHq/BTI=
