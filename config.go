@@ -10,6 +10,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	go_file "github.com/pefish/go-file"
 	go_format "github.com/pefish/go-format"
+	i_mysql "github.com/pefish/go-interface/i-mysql"
+	t_mysql "github.com/pefish/go-interface/t-mysql"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -393,4 +395,32 @@ func (c *ConfigManager) Get(str string, s interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func GetConfigsFromDb(mysqlInstance i_mysql.IMysql, configNames []string) (map[string]string, error) {
+	configResults := make([]struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}, 0)
+	err := mysqlInstance.Select(
+		&configResults,
+		&t_mysql.SelectParams{
+			TableName: "config",
+			Select:    "*",
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]string, 0)
+	for _, configName := range configNames {
+		for _, configResult := range configResults {
+			if configResult.Key == configName {
+				result[configName] = configResult.Value
+				break
+			}
+		}
+	}
+
+	return result, nil
 }
