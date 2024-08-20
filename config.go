@@ -397,7 +397,9 @@ func (c *ConfigManager) Get(str string, s interface{}) error {
 	return nil
 }
 
-func GetConfigsFromDb(mysqlInstance i_mysql.IMysql, configNames []string) (map[string]string, error) {
+func FetchConfigsFromDb(v any, mysqlInstance i_mysql.IMysql) error {
+	configNames := go_format.FormatInstance.GetValuesInTagFromStruct(v, "json")
+
 	configResults := make([]struct {
 		Key   string `json:"key"`
 		Value string `json:"value"`
@@ -410,9 +412,9 @@ func GetConfigsFromDb(mysqlInstance i_mysql.IMysql, configNames []string) (map[s
 		},
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	result := make(map[string]string, 0)
+	result := make(map[string]interface{}, 0)
 	for _, configName := range configNames {
 		for _, configResult := range configResults {
 			if configResult.Key == configName {
@@ -421,6 +423,5 @@ func GetConfigsFromDb(mysqlInstance i_mysql.IMysql, configNames []string) (map[s
 			}
 		}
 	}
-
-	return result, nil
+	return go_format.FormatInstance.MapToStruct(v, result)
 }
