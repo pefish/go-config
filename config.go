@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -398,6 +399,10 @@ func (c *ConfigManager) Get(str string, s interface{}) error {
 }
 
 func FetchConfigsFromDb(v any, mysqlInstance i_mysql.IMysql) error {
+	if reflect.TypeOf(v).Kind() != reflect.Ptr {
+		return errors.New("Argument must be a pointer type.")
+	}
+
 	configNames := go_format.FormatInstance.GetValuesInTagFromStruct(v, "json")
 
 	configResults := make([]struct {
