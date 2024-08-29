@@ -9,7 +9,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mitchellh/mapstructure"
-	go_file "github.com/pefish/go-file"
 	go_format "github.com/pefish/go-format"
 	i_mysql "github.com/pefish/go-interface/i-mysql"
 	t_mysql "github.com/pefish/go-interface/t-mysql"
@@ -78,11 +77,26 @@ func (c *ConfigManager) MergeConfigFile(configFilepath string) error {
 
 // set env file
 func (c *ConfigManager) SetEnvFile(envFilepath string) error {
-	if !go_file.FileInstance.Exists(envFilepath) {
+	exist, err := fileExists(envFilepath)
+	if err != nil {
+		return err
+	}
+	if !exist {
 		return errors.Errorf("Env file <%s> not be found.", envFilepath)
 	}
 	c.envFilepath = envFilepath
 	return nil
+}
+
+func fileExists(fileOrPath string) (bool, error) {
+	_, err := os.Stat(fileOrPath)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }
 
 type NotExistError struct {
