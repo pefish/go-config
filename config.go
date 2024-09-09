@@ -444,3 +444,66 @@ func FetchConfigsFromDb(v any, mysqlInstance i_mysql.IMysql) error {
 	}
 	return go_format.FormatInstance.MapToStruct(v, result)
 }
+
+// dynamically parses the config struct and sets up flags
+func ParseStructToFlagSet(flagSet *flag.FlagSet, struct_ interface{}) error {
+	// Get the type and value of the config
+	configType := reflect.TypeOf(struct_)
+	configValue := reflect.ValueOf(struct_)
+
+	// If the config is a pointer, get the element it points to
+	if configType.Kind() == reflect.Ptr {
+		configType = configType.Elem()
+		configValue = configValue.Elem()
+	}
+
+	// Iterate over the fields of the config struct
+	for i := 0; i < configType.NumField(); i++ {
+		field := configType.Field(i)
+		fieldValue := configValue.Field(i)
+
+		// Get the tag values
+		jsonTag := field.Tag.Get("json")
+		defaultTag := field.Tag.Get("default")
+		usageTag := field.Tag.Get("usage")
+
+		// Use the tag values to define the flags
+		switch fieldValue.Kind() {
+		case reflect.String:
+			flagSet.String(jsonTag, defaultTag, usageTag)
+		case reflect.Bool:
+			defaultValue := false
+			if defaultTag == "true" {
+				defaultValue = true
+			}
+			flagSet.Bool(jsonTag, defaultValue, usageTag)
+		case reflect.Int:
+			defaultValue := 0
+			if defaultTag != "" {
+				i, err := go_format.FormatInstance.ToInt(defaultTag)
+				if err != nil {
+					return errors.Wrapf(err, "Default tag <%s> to int error.", defaultTag)
+				}
+				defaultValue = i
+			}
+			flagSet.Int(jsonTag, defaultValue, usageTag)
+		case reflect.Float64:
+			defaultValue := 0.0
+			if defaultTag != "" {
+				i, err := go_format.FormatInstance.ToFloat64(defaultTag)
+				if err != nil {
+					return errors.Wrapf(err, "Default tag <%s> to int error.", defaultTag)
+				}
+				defaultValue = i
+			}
+			flagSet.Float64(jsonTag, defaultValue, usageTag)
+		default:
+			if strings.Contains(fieldValue.String(), "commander.BasicConfig") {
+				continue
+			}
+			return errors.Errorf("Type <%s> not be supported.", fieldValue.Kind().String())
+		}
+	}
+
+	return nil
+}
