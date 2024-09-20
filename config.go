@@ -219,7 +219,7 @@ func (c *ConfigManager) String(str string) (string, error) {
 		}
 		return "", err
 	}
-	result := go_format.FormatInstance.ToString(target)
+	result := go_format.ToString(target)
 	return result, nil
 }
 
@@ -240,7 +240,7 @@ func (c *ConfigManager) Int(str string) (int, error) {
 		}
 		return 0, err
 	}
-	result, err := go_format.FormatInstance.ToInt(target)
+	result, err := go_format.ToInt(target)
 	if err != nil {
 		return 0, err
 	}
@@ -264,7 +264,7 @@ func (c *ConfigManager) Int64(str string) (int64, error) {
 		}
 		return 0, err
 	}
-	result, err := go_format.FormatInstance.ToInt64(target)
+	result, err := go_format.ToInt64(target)
 	if err != nil {
 		return 0, err
 	}
@@ -288,7 +288,7 @@ func (c *ConfigManager) Uint64(str string) (uint64, error) {
 		}
 		return 0, err
 	}
-	result, err := go_format.FormatInstance.ToUint64(target)
+	result, err := go_format.ToUint64(target)
 	if err != nil {
 		return 0, err
 	}
@@ -312,7 +312,7 @@ func (c *ConfigManager) Bool(str string) (bool, error) {
 		}
 		return false, err
 	}
-	result, err := go_format.FormatInstance.ToBool(target)
+	result, err := go_format.ToBool(target)
 	if err != nil {
 		return false, err
 	}
@@ -328,7 +328,7 @@ func (c *ConfigManager) Float64(str string) (float64, error) {
 		}
 		return 0, err
 	}
-	result, err := go_format.FormatInstance.ToFloat64(target)
+	result, err := go_format.ToFloat64(target)
 	if err != nil {
 		return 0, err
 	}
@@ -375,7 +375,7 @@ func (c *ConfigManager) Map(str string) (map[string]interface{}, error) {
 		return nil, errors.New(`cast error`)
 	}
 	for k, v := range temp {
-		key := go_format.FormatInstance.ToString(k)
+		key := go_format.ToString(k)
 		result[key] = v
 	}
 	return result, nil
@@ -417,7 +417,7 @@ func FetchConfigsFromDb(v any, mysqlInstance i_mysql.IMysql) error {
 		return errors.New("Argument must be a pointer type.")
 	}
 
-	configNames := go_format.FormatInstance.GetValuesInTagFromStruct(v, "json")
+	configNames := go_format.GetValuesInTagFromStruct(v, "json")
 
 	configResults := make([]struct {
 		Key   string `json:"key"`
@@ -442,7 +442,7 @@ func FetchConfigsFromDb(v any, mysqlInstance i_mysql.IMysql) error {
 			}
 		}
 	}
-	return go_format.FormatInstance.MapToStruct(v, result)
+	return go_format.MapToStruct(v, result)
 }
 
 // dynamically parses the config struct and sets up flags
@@ -480,7 +480,7 @@ func ParseStructToFlagSet(flagSet *flag.FlagSet, struct_ interface{}) error {
 		case reflect.Int:
 			defaultValue := 0
 			if defaultTag != "" {
-				i, err := go_format.FormatInstance.ToInt(defaultTag)
+				i, err := go_format.ToInt(defaultTag)
 				if err != nil {
 					return errors.Wrapf(err, "Default tag <%s> to int error.", defaultTag)
 				}
@@ -490,7 +490,7 @@ func ParseStructToFlagSet(flagSet *flag.FlagSet, struct_ interface{}) error {
 		case reflect.Float64:
 			defaultValue := 0.0
 			if defaultTag != "" {
-				i, err := go_format.FormatInstance.ToFloat64(defaultTag)
+				i, err := go_format.ToFloat64(defaultTag)
 				if err != nil {
 					return errors.Wrapf(err, "Default tag <%s> to int error.", defaultTag)
 				}

@@ -19,7 +19,6 @@ func Parse(arguments []string) (map[string]string, error) {
 	return result, nil
 }
 
-
 func parseOne(map_ map[string]string, arguments *[]string) (bool, error) {
 	args := *arguments
 	if len(args) < 2 {
@@ -42,4 +41,3 @@ func parseOne(map_ map[string]string, arguments *[]string) (bool, error) {
 
 	return true, nil
 }
-
