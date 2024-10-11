@@ -29,7 +29,7 @@ func TestConfigClass_GetMap(t *testing.T) {
 	err := ConfigManagerInstance.MergeConfigFile(`./test.yaml`)
 	go_test_.Equal(t, nil, err)
 	map_ := ConfigManagerInstance.MustMap(`/test3/test2`)
-	go_test_.Equal(t, 45, go_format.FormatInstance.MustToInt(map_[`test3`]))
+	go_test_.Equal(t, 45, go_format.MustToInt(map_[`test3`]))
 
 	map1_ := ConfigManagerInstance.MustMap(`/test3/test225235`)
 	go_test_.Equal(t, map[string]interface{}(nil), map1_)
@@ -121,5 +121,5 @@ func TestConfigManager_SetEnvFile(t *testing.T) {
 	go_test_.Equal(t, nil, err)
 	err = ConfigManagerInstance.MergeConfigFile(`./test.yaml`)
 	go_test_.Equal(t, nil, err)
-	go_test_.Equal(t, 123, ConfigManagerInstance.MustUint64("abcd"))
+	go_test_.Equal(t, true, ConfigManagerInstance.MustUint64("abcd") == 123)
 }

@@ -417,7 +417,7 @@ func FetchConfigsFromDb(v any, mysqlInstance i_mysql.IMysql) error {
 		return errors.New("Argument must be a pointer type.")
 	}
 
-	configNames := go_format.GetValuesInTagFromStruct(v, "json")
+	configNames := go_format.FetchTags(v, "json")
 
 	configResults := make([]struct {
 		Key   string `json:"key"`
