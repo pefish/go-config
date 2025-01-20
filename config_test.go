@@ -1,6 +1,7 @@
 package go_config
 
 import (
+	"flag"
 	"testing"
 
 	go_format "github.com/pefish/go-format"
@@ -122,4 +123,22 @@ func TestConfigManager_SetEnvFile(t *testing.T) {
 	err = ConfigManagerInstance.MergeConfigFile(`./test.yaml`)
 	go_test_.Equal(t, nil, err)
 	go_test_.Equal(t, true, ConfigManagerInstance.MustUint64("abcd") == 123)
+}
+
+func TestParseStructToFlagSet(t *testing.T) {
+	flagSet := flag.NewFlagSet("aa", flag.ExitOnError)
+
+	type Config struct {
+		Test    string `json:"test" default:"default-flag-test" usage:"test flag set"`
+		FuckInt int    `json:"fuck-int" default:"888" usage:"test fuck int"`
+		Abc     int    `json:"abc" default:"888" usage:"test fuck int"`
+	}
+
+	var config struct {
+		Config
+		Name string `json:"name" default:"name" usage:"Name."`
+	}
+	err := ParseStructToFlagSet(flagSet, &config)
+	go_test_.Equal(t, nil, err)
+	flagSet.PrintDefaults()
 }

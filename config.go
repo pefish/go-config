@@ -497,6 +497,8 @@ func ParseStructToFlagSet(flagSet *flag.FlagSet, struct_ interface{}) error {
 				defaultValue = i
 			}
 			flagSet.Float64(jsonTag, defaultValue, usageTag)
+		case reflect.Struct:
+			ParseStructToFlagSet(flagSet, fieldValue.Interface())
 		default:
 			if strings.Contains(fieldValue.String(), "commander.BasicConfig") {
 				continue
