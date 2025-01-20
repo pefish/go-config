@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -498,6 +499,9 @@ func ParseStructToFlagSet(flagSet *flag.FlagSet, struct_ interface{}) error {
 			}
 			flagSet.Float64(jsonTag, defaultValue, usageTag)
 		case reflect.Struct:
+			if slices.Contains(strings.Split(jsonTag, ","), "omitempty") {
+				continue
+			}
 			ParseStructToFlagSet(flagSet, fieldValue.Interface())
 		default:
 			if strings.Contains(fieldValue.String(), "commander.BasicConfig") {

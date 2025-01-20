@@ -133,8 +133,12 @@ func TestParseStructToFlagSet(t *testing.T) {
 		FuckInt int    `json:"fuck-int" default:"888" usage:"test fuck int"`
 		Abc     int    `json:"abc" default:"888" usage:"test fuck int"`
 	}
+	type Config1 struct {
+		Symbol string `json:"symbol" default:"symbol" usage:"symbol."`
+	}
 
 	var config struct {
+		Config1 `json:",omitempty"`
 		Config
 		Name string `json:"name" default:"name" usage:"Name."`
 	}
